@@ -8,3 +8,5 @@
 - 说明：写任务书的管理者和执行者是同一个会话，验收不独立
 
 ## 进度
+- 任务 1 完成：`tools/tracks.mjs`（FMA 扫描＋逐首核 CC0＋与判卷同算法离线测速）扫了 Loyalty Freak Music、Monplaisir 等页面 ~130 首，选 10 首进 `audio/`（128kbps，长曲剪到 200 秒，共 29.5MB），`data/tracks.json` 由 `node tools/tracks.mjs build` 生成。`--only data,license` 5/5 PASS
+  - 坑：只看一拍间隔的粗测速会把切分节奏认成 144 BPM（Dance Robot 实为 120），改成 1/2/4/8 拍一起打分后正常；HoliznaCC0 艺人页本机打不开，未用

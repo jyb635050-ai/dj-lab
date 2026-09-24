@@ -1,0 +1,110 @@
+[
+ {
+  "id": "meet-the-decks",
+  "title": { "zh": "认识打碟台", "en": "Meet the decks" },
+  "intro": { "zh": "左右两台唱机各放一首歌，中间的混音台决定观众听到什么。先让音乐响起来。", "en": "Each deck plays one track; the mixer in the middle decides what the crowd hears. First, make some noise." },
+  "setup": { "a": "sweet-you", "b": "one-cool-minute" },
+  "steps": [
+   { "text": { "zh": "DJ 的工作就是把两首歌无缝接起来。左边是 A 台，右边是 B 台，中间是混音台。", "en": "A DJ joins two songs without a gap. Deck A is on the left, deck B on the right, the mixer sits in between." }, "check": { "kind": "ack" } },
+   { "text": { "zh": "按下 A 台的 ▶ 播放键。", "en": "Press ▶ on deck A." }, "hint": { "zh": "看 A 台下面那排按钮，中间最大的就是。", "en": "It’s the big button in the row under deck A." }, "check": { "kind": "play", "deck": "a", "is": true } },
+   { "text": { "zh": "把 A 台的音量推子（VOL）推到最上面。", "en": "Push deck A’s volume fader (VOL) all the way up." }, "hint": { "zh": "在混音台中间，青色那根竖推子。", "en": "The cyan vertical fader in the middle of the mixer." }, "check": { "kind": "slider", "id": "vol-a", "to": 1, "tol": 0.04 } },
+   { "text": { "zh": "拖一下 A 台的转盘，感受它跟着音乐转。然后再按一次 ▶ 暂停。", "en": "Watch the platter spin with the music, then press ▶ again to pause." }, "check": { "kind": "play", "deck": "a", "is": false } }
+  ]
+ },
+ {
+  "id": "count-the-beat",
+  "title": { "zh": "数拍子与乐句", "en": "Beats and phrases" },
+  "intro": { "zh": "舞曲是按「拍」和「小节」搭起来的。听懂节拍，才知道什么时候动手。", "en": "Dance music is built from beats and bars. Hear the grid and you’ll know when to move." },
+  "setup": { "a": "after-party", "b": "sweet-you" },
+  "steps": [
+   { "text": { "zh": "播放 A 台，跟着底鼓在心里数「1、2、3、4」。", "en": "Play deck A and count “1, 2, 3, 4” along with the kick drum." }, "hint": { "zh": "混音台上的 A 排小灯会跟着拍子一格一格亮。", "en": "The A row of lights on the mixer steps along with the beat." }, "check": { "kind": "play", "deck": "a", "is": true } },
+   { "text": { "zh": "舞曲一小节有几拍？", "en": "How many beats are in one bar of dance music?" }, "check": { "kind": "quiz", "choices": { "zh": ["4 拍", "3 拍", "6 拍"], "en": ["4 beats", "3 beats", "6 beats"] }, "answer": 0, "why": { "zh": "看小灯，四格一轮。", "en": "Watch the lights — four steps, then repeat." } } },
+   { "text": { "zh": "8 个小节（32 拍）组成一个乐句。波形上的彩色竖线就是乐句的开头。它有什么用？", "en": "Eight bars (32 beats) make a phrase — the coloured lines on the waveform mark where one starts. Why does that matter?" }, "check": { "kind": "quiz", "choices": { "zh": ["新的乐句开头，最适合让下一首歌进场", "没用，随时进场都一样", "只有鼓手才需要知道"], "en": ["A new phrase is the best moment to bring the next song in", "Nothing — any moment is fine", "Only drummers care"] }, "answer": 0, "why": { "zh": "在乐句中间换歌，听起来会像绊了一跤。", "en": "Switching mid-phrase sounds like a stumble." } } },
+   { "text": { "zh": "转盘中间的「12.3」这种数字是什么意思？", "en": "What does a number like “12.3” in the middle of the platter mean?" }, "check": { "kind": "quiz", "choices": { "zh": ["第 12 小节的第 3 拍", "还剩 12 分 3 秒", "音量 12.3"], "en": ["Bar 12, beat 3", "12 min 3 s left", "Volume 12.3"] }, "answer": 0, "why": { "zh": "小节.拍，DJ 靠它数乐句。", "en": "Bar.beat — how DJs keep track of phrases." } } }
+  ]
+ },
+ {
+  "id": "faders",
+  "title": { "zh": "音量与交叉推子", "en": "Volume and crossfader" },
+  "intro": { "zh": "两首歌同时在放，交叉推子决定观众听到哪一边。", "en": "With both decks playing, the crossfader picks which side the crowd hears." },
+  "setup": { "a": "sweet-you", "b": "lag" },
+  "steps": [
+   { "text": { "zh": "播放 A 台。", "en": "Play deck A." }, "check": { "kind": "play", "deck": "a", "is": true } },
+   { "text": { "zh": "再播放 B 台——两首歌叠在一起了。", "en": "Now play deck B — both songs at once." }, "check": { "kind": "play", "deck": "b", "is": true } },
+   { "text": { "zh": "把最下面的交叉推子推到最左：只剩 A。", "en": "Slide the crossfader at the bottom all the way left: only A." }, "check": { "kind": "slider", "id": "xfader", "to": 0, "tol": 0.04 } },
+   { "text": { "zh": "推到最右：只剩 B。", "en": "All the way right: only B." }, "check": { "kind": "slider", "id": "xfader", "to": 1, "tol": 0.04 } },
+   { "text": { "zh": "推回中间，两边一样大。", "en": "Back to the middle — both equally loud." }, "check": { "kind": "slider", "id": "xfader", "to": 0.5, "tol": 0.06 } },
+   { "text": { "zh": "不用交叉推子也能关掉一边：把 B 台音量推子拉到底。", "en": "You can also silence a side with its channel fader: pull deck B’s volume all the way down." }, "check": { "kind": "slider", "id": "vol-b", "to": 0, "tol": 0.04 } }
+  ]
+ },
+ {
+  "id": "eq",
+  "title": { "zh": "EQ：高、中、低", "en": "The EQ: highs, mids, lows" },
+  "intro": { "zh": "每条通道有三个 EQ 旋钮，分别管高音、人声和乐器、低音和底鼓。", "en": "Each channel has three EQ knobs: highs, the vocal and instrument mids, and the lows where the kick lives." },
+  "setup": { "a": "lag", "b": "sweet-you" },
+  "steps": [
+   { "text": { "zh": "播放 A 台。", "en": "Play deck A." }, "check": { "kind": "play", "deck": "a", "is": true } },
+   { "text": { "zh": "把 A 通道的 LOW 旋钮拧到底（按住往下拖）。听，底鼓和贝斯没了。", "en": "Turn channel A’s LOW knob all the way down (drag downward). The kick and bass vanish." }, "hint": { "zh": "旋钮都是按住上下拖；双击回到中间。", "en": "Drag knobs up or down; double-click resets them." }, "check": { "kind": "slider", "id": "eq-low-a", "to": 0, "tol": 0.04 } },
+   { "text": { "zh": "把 LOW 拧回中间（双击也行）。", "en": "Bring LOW back to the middle (double-click works)." }, "check": { "kind": "slider", "id": "eq-low-a", "to": 0.5, "tol": 0.05 } },
+   { "text": { "zh": "再把 HI 拧到底，高音变闷。", "en": "Now turn HI all the way down — the top end goes dull." }, "check": { "kind": "slider", "id": "eq-hi-a", "to": 0, "tol": 0.04 } },
+   { "text": { "zh": "把 HI 拧回中间。", "en": "Return HI to the middle." }, "check": { "kind": "slider", "id": "eq-hi-a", "to": 0.5, "tol": 0.05 } },
+   { "text": { "zh": "两首歌的低音同时开着，会怎么样？", "en": "What happens when both songs play their bass at the same time?" }, "check": { "kind": "quiz", "choices": { "zh": ["两个底鼓和贝斯打架，糊成一团", "低音翻倍，更好听", "什么都不会发生"], "en": ["Two kicks and basslines clash into mud", "Double bass, sounds better", "Nothing happens"] }, "answer": 0, "why": { "zh": "所以接歌时要「交换低音」——下一课会用到。", "en": "That’s why DJs swap the bass — you’ll use it soon." } } }
+  ]
+ },
+ {
+  "id": "beatmatch",
+  "title": { "zh": "变速与对拍", "en": "Tempo and beatmatching" },
+  "intro": { "zh": "两首歌速度不同，鼓点就会越走越乱。用 TEMPO 推子把它们调到一样快。", "en": "Two songs at different speeds drift apart. Use the TEMPO fader to make them match." },
+  "setup": { "a": "sweet-you", "b": "lag" },
+  "steps": [
+   { "text": { "zh": "播放 A 台（120 BPM）。", "en": "Play deck A (120 BPM)." }, "check": { "kind": "play", "deck": "a", "is": true } },
+   { "text": { "zh": "播放 B 台（125 BPM）。听，鼓点在「打架」。", "en": "Play deck B (125 BPM). Hear the kicks galloping?" }, "check": { "kind": "play", "deck": "b", "is": true } },
+   { "text": { "zh": "B 比 A 快，要让 B 跟上 A，B 的 TEMPO 推子该往哪边？", "en": "B is faster than A. Which way should B’s TEMPO fader go?" }, "check": { "kind": "quiz", "choices": { "zh": ["往下，让 B 变慢", "往上，让 B 变快"], "en": ["Down — slow B down", "Up — speed B up"] }, "answer": 0, "why": { "zh": "BPM 大的那首要放慢。", "en": "The higher BPM needs to come down." } } },
+   { "text": { "zh": "拖 B 台的 TEMPO 推子，让 B 的 BPM 读数和 A 相差不到 0.5。", "en": "Drag deck B’s TEMPO fader until its BPM is within 0.5 of deck A." }, "hint": { "zh": "拖大概位置，再点一下推子用方向键微调。", "en": "Drag close, then click the fader and fine-tune with the arrow keys." }, "check": { "kind": "bpmMatch", "deck": "b", "tol": 0.5 } },
+   { "text": { "zh": "速度一样了，拍子也要对齐：播放中拖 B 台转盘，往前推一点或往后拉一点，直到两排小灯同时亮。", "en": "Same tempo — now line up the beats: while B plays, nudge its platter forward or back until both rows of lights flash together." }, "check": { "kind": "ack" } }
+  ]
+ },
+ {
+  "id": "sync-loop-cue",
+  "title": { "zh": "SYNC、循环与热点", "en": "Sync, loops and hot cues" },
+  "intro": { "zh": "三个让你轻松很多的按钮：一键对拍、原地循环、瞬间跳回记号。", "en": "Three buttons that make life easy: one-press beatmatch, a loop that holds, and markers you can jump to." },
+  "setup": { "a": "ymiy", "b": "hello-regan" },
+  "steps": [
+   { "text": { "zh": "播放 A 台。", "en": "Play deck A." }, "check": { "kind": "play", "deck": "a", "is": true } },
+   { "text": { "zh": "播放 B 台。", "en": "Play deck B." }, "check": { "kind": "play", "deck": "b", "is": true } },
+   { "text": { "zh": "按 B 台的 SYNC：B 会自动变到 A 的速度，并且把拍子对齐。", "en": "Press SYNC on deck B: it jumps to A’s tempo and lines up the beats." }, "check": { "kind": "sync", "deck": "b" } },
+   { "text": { "zh": "按 A 台的 LOOP，把当前 4 拍锁成循环——想拖多久拖多久。", "en": "Press LOOP on deck A to lock the current 4 beats into a loop — hold it as long as you like." }, "check": { "kind": "loop", "deck": "a", "is": true } },
+   { "text": { "zh": "按一下 A 台的热点 1 做记号，过一会儿再按一次，瞬间跳回去。", "en": "Tap hot cue 1 on deck A to drop a marker, then tap it again later to jump straight back." }, "hint": { "zh": "设过的热点会亮橙色；右键可以清除。", "en": "Set cues glow orange; right-click clears one." }, "check": { "kind": "hotcue", "deck": "a", "n": 1 } }
+  ]
+ },
+ {
+  "id": "filter-scratch",
+  "title": { "zh": "滤波与搓碟", "en": "Filter sweeps and scratching" },
+  "intro": { "zh": "最有「现场感」的两招：让音乐像沉到水里，再像从收音机里冒出来；然后亲手搓一段。", "en": "Two crowd-pleasers: sink the music underwater, pull it out of a radio — then scratch it by hand." },
+  "setup": { "a": "friend-to-friend", "b": "after-party" },
+  "steps": [
+   { "text": { "zh": "播放 A 台。", "en": "Play deck A." }, "check": { "kind": "play", "deck": "a", "is": true } },
+   { "text": { "zh": "把 A 通道的 FILTER 往下拧到接近底：音乐像沉到了水里（低通）。", "en": "Turn channel A’s FILTER down near the bottom: the music sinks underwater (low-pass)." }, "check": { "kind": "slider", "id": "filter-a", "to": 0.1, "tol": 0.1 } },
+   { "text": { "zh": "再往上拧到接近顶：只剩下细细的高音（高通）。", "en": "Now turn it up near the top: only a thin top end is left (high-pass)." }, "check": { "kind": "slider", "id": "filter-a", "to": 0.9, "tol": 0.1 } },
+   { "text": { "zh": "拧回正中间，音乐恢复原样。", "en": "Back to dead centre — the music is whole again." }, "check": { "kind": "slider", "id": "filter-a", "to": 0.5, "tol": 0.04 } },
+   { "text": { "zh": "暂停 A 台。", "en": "Pause deck A." }, "check": { "kind": "play", "deck": "a", "is": false } },
+   { "text": { "zh": "按住 A 台转盘，来回快速地搓几下——这就是搓碟！", "en": "Grab deck A’s platter and rub it back and forth a few times — that’s a scratch!" }, "hint": { "zh": "3 秒内来回换 4 次方向就算过。", "en": "Change direction four times within three seconds." }, "check": { "kind": "scratch", "deck": "a" } }
+  ]
+ },
+ {
+  "id": "first-mix",
+  "title": { "zh": "你的第一次接歌", "en": "Your first mix" },
+  "intro": { "zh": "把学过的全部串起来：对拍、交换低音、推交叉推子——从 A 顺滑地过渡到 B。", "en": "Put it all together: match the beat, swap the bass, ride the crossfader — glide from A into B." },
+  "setup": { "a": "one-cool-minute", "b": "lag", "mixer": { "xfader": 0 } },
+  "steps": [
+   { "text": { "zh": "播放 A 台，这是正在放的歌。", "en": "Play deck A — the song on air." }, "check": { "kind": "play", "deck": "a", "is": true } },
+   { "text": { "zh": "先把 B 通道的 LOW 拧到底，免得等会儿两个底鼓打架。", "en": "First turn channel B’s LOW all the way down so the kicks won’t clash." }, "check": { "kind": "slider", "id": "eq-low-b", "to": 0, "tol": 0.04 } },
+   { "text": { "zh": "在乐句开头播放 B 台。", "en": "Start deck B at the top of a phrase." }, "check": { "kind": "play", "deck": "b", "is": true } },
+   { "text": { "zh": "按 B 台的 SYNC，让两首歌步调一致。", "en": "Press SYNC on deck B so both songs march together." }, "check": { "kind": "sync", "deck": "b" } },
+   { "text": { "zh": "把交叉推子慢慢推到中间，B 悄悄进场。", "en": "Ease the crossfader to the middle — B slips in." }, "check": { "kind": "slider", "id": "xfader", "to": 0.5, "tol": 0.08 } },
+   { "text": { "zh": "交换低音第一步：把 A 通道的 LOW 拧到底。", "en": "Bass swap, part one: turn channel A’s LOW all the way down." }, "check": { "kind": "slider", "id": "eq-low-a", "to": 0, "tol": 0.04 } },
+   { "text": { "zh": "第二步：把 B 通道的 LOW 拧回中间——现在是 B 的底鼓在带场子。", "en": "Part two: bring channel B’s LOW back to the middle — B’s kick now drives the room." }, "check": { "kind": "slider", "id": "eq-low-b", "to": 0.5, "tol": 0.05 } },
+   { "text": { "zh": "把交叉推子推到最右，A 退场。恭喜，你完成了第一次接歌！", "en": "Slide the crossfader fully right and let A bow out. That’s your first mix!" }, "check": { "kind": "slider", "id": "xfader", "to": 1, "tol": 0.04 } }
+  ]
+ }
+]

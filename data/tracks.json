@@ -1,0 +1,162 @@
+[
+ {
+  "id": "sweet-you",
+  "title": "Sweet You",
+  "artist": "Loyalty Freak Music",
+  "file": "audio/sweet-you.mp3",
+  "bpm": 120,
+  "firstBeat": 0.492,
+  "groove": [
+   0,
+   131
+  ],
+  "duration": 160,
+  "license": "CC0-1.0",
+  "source": "https://freemusicarchive.org/music/Loyalty_Freak_Music/MELODIES_WITH_A_BEAT/Loyalty_Freak_Music_-_MELODIES_WITH_A_BEAT_-_01_Sweet_You/",
+  "origFile": "Loyalty_Freak_Music_-_01_-_Sweet_You.mp3"
+ },
+ {
+  "id": "one-cool-minute",
+  "title": "One Cool Minute",
+  "artist": "Loyalty Freak Music",
+  "file": "audio/one-cool-minute.mp3",
+  "bpm": 120,
+  "firstBeat": 0.492,
+  "groove": [
+   0,
+   188
+  ],
+  "duration": 193,
+  "license": "CC0-1.0",
+  "source": "https://freemusicarchive.org/music/Loyalty_Freak_Music/MINIMAL_AMBIENT_BOUNCE/Loyalty_Freak_Music_-_MINIMAL_AMBIENT_BOUNCE_-_02_One_Cool_Minute/",
+  "origFile": "Loyalty_Freak_Music_-_02_-_One_Cool_Minute.mp3"
+ },
+ {
+  "id": "after-party",
+  "title": "After Party",
+  "artist": "Loyalty Freak Music",
+  "file": "audio/after-party.mp3",
+  "bpm": 120,
+  "firstBeat": 0.492,
+  "groove": [
+   35,
+   126
+  ],
+  "duration": 177,
+  "license": "CC0-1.0",
+  "source": "https://freemusicarchive.org/music/Loyalty_Freak_Music/ROBOT_DANCE_/Loyalty_Freak_Music_-_ROBOT_DANCE__-_03_After_Party/",
+  "origFile": "Loyalty_Freak_Music_-_03_-_After_Party.mp3"
+ },
+ {
+  "id": "dance-robot",
+  "title": "Dance Robot ACTIVATE",
+  "artist": "Loyalty Freak Music",
+  "file": "audio/dance-robot.mp3",
+  "bpm": 120,
+  "firstBeat": 0.497,
+  "groove": [
+   45,
+   111
+  ],
+  "duration": 159,
+  "license": "CC0-1.0",
+  "source": "https://freemusicarchive.org/music/Loyalty_Freak_Music/ROLLER_DISCO_DANCE_DANCE/Loyalty_Freak_Music_-_ROLLER_DISCO_DANCE_DANCE_-_02_Dance_Robot_ACTIVATE/",
+  "origFile": "Loyalty_Freak_Music_-_02_-_Dance_Robot_ACTIVATE.mp3"
+ },
+ {
+  "id": "ymiy",
+  "title": "Y♥M I ♥Y",
+  "artist": "Demoiselle Döner",
+  "file": "audio/ymiy.mp3",
+  "bpm": 122.78,
+  "firstBeat": 0.237,
+  "groove": [
+   10,
+   186
+  ],
+  "duration": 200,
+  "license": "CC0-1.0",
+  "source": "https://freemusicarchive.org/music/Demoiselle_Dner/Best_Of__Pick_Your_Player/Demoiselle_Dner_-_Best_Of_-_Pick_Your_Player_-_20_YM_I_Y/",
+  "origFile": "Demoiselle_Dner_-_20_-_YM_I_Y.mp3"
+ },
+ {
+  "id": "lag",
+  "title": "Lag",
+  "artist": "Loyalty Freak Music",
+  "file": "audio/lag.mp3",
+  "bpm": 125,
+  "firstBeat": 0.013,
+  "groove": [
+   10,
+   171
+  ],
+  "duration": 200,
+  "license": "CC0-1.0",
+  "source": "https://freemusicarchive.org/music/Loyalty_Freak_Music/MINIMAL_AMBIENT_BOUNCE/Loyalty_Freak_Music_-_MINIMAL_AMBIENT_BOUNCE_-_06_Lag/",
+  "origFile": "Loyalty_Freak_Music_-_06_-_Lag.mp3"
+ },
+ {
+  "id": "hello-regan",
+  "title": "Hello Regan !",
+  "artist": "Loyalty Freak Music",
+  "file": "audio/hello-regan.mp3",
+  "bpm": 128.02,
+  "firstBeat": 0.253,
+  "groove": [
+   145,
+   196
+  ],
+  "duration": 200,
+  "license": "CC0-1.0",
+  "source": "https://freemusicarchive.org/music/Loyalty_Freak_Music/WITCHY_BATTY_SPOOKY_HALLOWEEN_IN_SEPTEMBER_/Hello_Regan_/",
+  "origFile": "Loyalty_Freak_Music_-_04_-_Hello_Regan_.mp3"
+ },
+ {
+  "id": "friend-to-friend",
+  "title": "Friend to friend",
+  "artist": "Loyalty Freak Music",
+  "file": "audio/friend-to-friend.mp3",
+  "bpm": 130.02,
+  "firstBeat": 0.248,
+  "groove": [
+   0,
+   151
+  ],
+  "duration": 163.5,
+  "license": "CC0-1.0",
+  "source": "https://freemusicarchive.org/music/Loyalty_Freak_Music/INSTRUMENTAL_RB_BEATS_TO_SING_OR_RAP_ON/Loyalty_Freak_Music_-_INSTRUMENTAL_RB_BEATS_TO_SING_OR_RAP_ON_-_02_Friend_to_friend/",
+  "origFile": "Loyalty_Freak_Music_-_02_-_Friend_to_friend.mp3"
+ },
+ {
+  "id": "why-oh-you",
+  "title": "Why Oh You Are L O V E",
+  "artist": "Dancefloor is Lava",
+  "file": "audio/why-oh-you.mp3",
+  "bpm": 130.04,
+  "firstBeat": 0.031,
+  "groove": [
+   0,
+   152
+  ],
+  "duration": 156.1,
+  "license": "CC0-1.0",
+  "source": "https://freemusicarchive.org/music/Dancefloor_is_Lava/Best_Of__Pick_Your_Player/Dancefloor_is_Lava_-_Best_Of_-_Pick_Your_Player_-_04_Why_Oh_You_Are_L_O_V_E/",
+  "origFile": "Dancefloor_is_Lava_-_04_-_Why_Oh_You_Are_L_O_V_E.mp3"
+ },
+ {
+  "id": "surfing",
+  "title": "Surfing",
+  "artist": "Komiku",
+  "file": "audio/surfing.mp3",
+  "bpm": 110.01,
+  "firstBeat": 0.543,
+  "groove": [
+   0,
+   94
+  ],
+  "duration": 98.9,
+  "license": "CC0-1.0",
+  "source": "https://freemusicarchive.org/music/Komiku/Best_Of__Pick_Your_Player/Komiku_-_Best_Of_-_Pick_Your_Player_-_08_Surfing/",
+  "origFile": "Komiku_-_08_-_Surfing.mp3"
+ }
+]

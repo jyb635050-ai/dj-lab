@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#06070a">
+<meta name="description" content="BEAT LAB 律动实验室：两台唱机、一张混音台、八节闯关课，用真实的 CC0 舞曲玩着学会打碟。">
+<title>BEAT LAB 律动实验室</title>
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="preload" href="fonts/space-grotesk.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body data-route="home">
+<div class="bg" aria-hidden="true"></div>
+<header class="topbar">
+  <a class="brand" href="#/" aria-label="BEAT LAB">
+    <svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true"><circle cx="16" cy="16" r="14.5" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".35"/><circle cx="16" cy="16" r="9" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="16" cy="16" r="2.4" fill="currentColor"/><path d="M16 1.5v6" stroke="currentColor" stroke-width="1.5"/></svg>
+    <span>BEAT<b>LAB</b></span>
+  </a>
+  <nav>
+    <a href="#/" data-nav="home" data-i18n="nav_learn">课程</a>
+    <a href="#/studio" data-nav="studio" data-i18n="nav_studio">打碟台</a>
+    <a href="#/credits" data-nav="credits" data-i18n="nav_credits">曲目出处</a>
+  </nav>
+  <button class="lang" type="button" data-testid="lang" data-i18n="lang">EN</button>
+</header>
+<p class="rotate-hint">把手机横过来，打碟台更好用</p>
+<main id="view"></main>
+<footer class="foot" data-i18n="foot">音乐：CC0 · Free Music Archive　|　BEAT LAB 律动实验室</footer>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
