@@ -4,10 +4,9 @@ const unlock = () => { if (ctx.state !== 'running') ctx.resume(); };
 addEventListener('pointerdown', unlock, true);
 addEventListener('keydown', unlock, true);
 
-const master = ctx.createGain(); master.gain.value = 0.72;
-const limiter = ctx.createDynamicsCompressor();
-limiter.threshold.value = -2; limiter.knee.value = 0; limiter.ratio.value = 20; limiter.attack.value = 0.002; limiter.release.value = 0.2;
-master.connect(limiter); limiter.connect(ctx.destination);
+// 总线：不用压缩/限幅（它会随底鼓一压一放，把鼓点形状弄糊），靠留足余量防削波：两台满音量叠加也不过 0dBFS 太多
+const master = ctx.createGain(); master.gain.value = 0.6;
+const limiter = master; master.connect(ctx.destination);
 export const masterAnalyser = ctx.createAnalyser(); masterAnalyser.fftSize = 1024; master.connect(masterAnalyser);
 export const fxBus = ctx.createGain(); fxBus.gain.value = 0.5; fxBus.connect(limiter); // 提示音，不经过推子
 
@@ -28,11 +27,18 @@ export class Deck {
     Object.assign(this, { name, track: null, buf: null, rev: null, peaks: null, playing: false, pitch: 0, bend: 1, offset: 0, t0: 0, src: null, loop: null, cues: [null, null, null, null], cue: 0, loading: false, pendingPlay: false, loadSeq: 0 });
     const bq = (type, f, q) => { const b = ctx.createBiquadFilter(); b.type = type; b.frequency.value = f; if (q) b.Q.value = q; return b; };
     this.input = ctx.createGain();
-    this.low = bq('lowshelf', 220); this.mid = bq('peaking', 1000, 0.7); this.hi = bq('highshelf', 3800);
+    // 三段隔离式 EQ（DJ 混音台那种）：250Hz / 2.5kHz 两个 24dB/倍频程分频点，每段一个增益，拧到底就是真的切掉
+    const LR = (type, f) => { const a = bq(type, f, Math.SQRT1_2), b = bq(type, f, Math.SQRT1_2); a.connect(b); return [a, b]; };
+    const [l1, l2] = LR('lowpass', 250), [h1, h2] = LR('highpass', 250), [m1, m2] = LR('lowpass', 2500), [t1, t2] = LR('highpass', 2500);
+    const ap = bq('allpass', 2500, 0.5); // 低频路补一个同相位的全通，三段加起来才平
+    const gl = ctx.createGain(), gm = ctx.createGain(), gh = ctx.createGain(), sum = ctx.createGain();
+    this.low = { gain: gl.gain }; this.mid = { gain: gm.gain }; this.hi = { gain: gh.gain };
+    this.input.connect(l1); l2.connect(ap); ap.connect(gl); gl.connect(sum);
+    this.input.connect(h1); h2.connect(m1); m2.connect(gm); gm.connect(sum); h2.connect(t1); t2.connect(gh); gh.connect(sum);
     this.lp = bq('lowpass', 22000, 0.9); this.hp = bq('highpass', 16, 0.9);
     this.vol = ctx.createGain(); this.xf = ctx.createGain();
     this.meter = ctx.createAnalyser(); this.meter.fftSize = 512;
-    this.input.connect(this.low); this.low.connect(this.mid); this.mid.connect(this.hi); this.hi.connect(this.lp); this.lp.connect(this.hp);
+    sum.connect(this.lp); this.lp.connect(this.hp);
     this.hp.connect(this.vol); this.vol.connect(this.xf); this.xf.connect(master); this.vol.connect(this.meter);
     this.meterBuf = new Float32Array(this.meter.fftSize);
   }
@@ -124,7 +130,7 @@ export class Deck {
     const dPos = dAngle / (2 * Math.PI) * SEC_PER_TURN; if (!dPos) return;
     if (!this.rev) {
       const b = ctx.createBuffer(this.buf.numberOfChannels, this.buf.length, this.buf.sampleRate);
-      for (let c = 0; c < b.numberOfChannels; c++) b.getChannelData(c).set(this.buf.getChannelData(c).slice().reverse());
+      for (let c = 0; c < b.numberOfChannels; c++) { const src = this.buf.getChannelData(c), dst = b.getChannelData(c), n = src.length; for (let i = 0; i < n; i++) dst[i] = src[n - 1 - i]; } // 不用 slice，免得产生大块临时内存
       this.rev = b;
     }
     const fwd = dPos > 0, from = fwd ? this.offset : this.buf.duration - this.offset, len = Math.abs(dPos);
@@ -136,7 +142,7 @@ export class Deck {
     g.onended = () => { g.disconnect(); env.disconnect(); };
     this.offset = Math.max(0, Math.min(this.buf.duration - 0.05, this.offset + dPos));
   }
-  setEq(band, v) { ramp(this[band].gain, eqDb(v)); }
+  setEq(band, v) { ramp(this[band].gain, eqGain(v), 0.008); }
   setFilter(v) {
     if (v < 0.5) { ramp(this.lp.frequency, 120 * Math.pow(22000 / 120, v / 0.5)); ramp(this.hp.frequency, 16); }
     else { ramp(this.lp.frequency, 22000); ramp(this.hp.frequency, 16 * Math.pow(7000 / 16, (v - 0.5) / 0.5)); }
@@ -144,8 +150,8 @@ export class Deck {
   }
   setVol(v) { ramp(this.vol.gain, v * v, 0.006); }
 }
-// EQ：中点 0dB；左半 0 → −40dB（切掉）；右半最多 +6dB
-export const eqDb = v => v < 0.5 ? -40 * Math.pow((0.5 - v) / 0.5, 1.6) : 6 * (v - 0.5) / 0.5;
+// EQ：中点 0dB；左半一路降到拧到底＝完全切掉；右半最多 +6dB
+export const eqGain = v => v <= 0.005 ? 0 : v < 0.5 ? Math.pow(10, -30 * Math.pow((0.5 - v) / 0.5, 1.5) / 20) * Math.min(1, v / 0.08) : Math.pow(10, 6 * (v - 0.5) / 0.5 / 20);
 
 // 波形：每 10ms 一格，存整体峰值和低频峰值
 function computePeaks(buf) {
@@ -165,7 +171,8 @@ function computePeaks(buf) {
 export const A = new Deck('a'), B = new Deck('b');
 export const decks = { a: A, b: B };
 export function setXfader(x) { ramp(A.xf.gain, Math.cos(x * Math.PI / 2), 0.006); ramp(B.xf.gain, Math.sin(x * Math.PI / 2), 0.006); }
-export function masterLevel() { const b = new Float32Array(masterAnalyser.fftSize); masterAnalyser.getFloatTimeDomainData(b); let s = 0; for (const v of b) s += v * v; return Math.sqrt(s / b.length); }
+const mBuf = new Float32Array(masterAnalyser.fftSize);
+export function masterLevel() { const b = mBuf; masterAnalyser.getFloatTimeDomainData(b); let s = 0; for (const v of b) s += v * v; return Math.sqrt(s / b.length); }
 
 // 过关提示音：两个柔和的正弦音
 export function chime(kind = 'step') {

@@ -28,7 +28,7 @@ const STR = {
     foot: 'Music: CC0 · Free Music Archive　|　BEAT LAB',
   },
 };
-let lang = (() => { try { return localStorage.getItem('beatlab.lang') === 'en' ? 'en' : 'zh'; } catch { return 'zh'; } })();
+let lang = (() => { try { return JSON.parse(localStorage.getItem('beatlab.lang')) === 'en' ? 'en' : 'zh'; } catch { return 'zh'; } })();
 const t = (k, ...a) => { const v = STR[lang][k]; return typeof v === 'function' ? v(...a) : v; };
 const L = o => (o && typeof o === 'object' ? o[lang] ?? o.zh : o);
 const store = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { } } };
@@ -91,8 +91,8 @@ function stripView(d) {
 }
 function mixerView() {
   const vu = d => (d.ui.vu = h('div', { class: 'vu' }, h('i')));
-  SL['vol-a'] = makeSlider({ id: 'vol-a', kind: 'v', min: 0, max: 1, step: 0.01, value: 0.8, label: 'VOL', onInput: v => A.setVol(v), cls: 'vol' });
-  SL['vol-b'] = makeSlider({ id: 'vol-b', kind: 'v', min: 0, max: 1, step: 0.01, value: 0.8, label: 'VOL', onInput: v => B.setVol(v), cls: 'vol' });
+  SL['vol-a'] = makeSlider({ id: 'vol-a', kind: 'v', min: 0, max: 1, step: 0.01, value: 0.8, label: 'VOL', onInput: v => A.setVol(v), cls: 'vol vol-a' });
+  SL['vol-b'] = makeSlider({ id: 'vol-b', kind: 'v', min: 0, max: 1, step: 0.01, value: 0.8, label: 'VOL', onInput: v => B.setVol(v), cls: 'vol vol-b' });
   SL.xfader = makeSlider({ id: 'xfader', kind: 'h', min: 0, max: 1, step: 0.01, value: 0.5, onInput: v => setXfader(v), cls: 'xfader', bipolar: true });
   const lights = d => (d.ui.lights = [0, 1, 2, 3].map(() => h('i')));
   mixerView.energy = h('i');
@@ -105,7 +105,8 @@ function mixerView() {
 }
 let consoleEl, libEl;
 function buildConsole() {
-  consoleEl = h('div', { class: 'console' }, deckView(A), mixerView(), deckView(B));
+  const da = deckView(A), db = deckView(B);
+  consoleEl = h('div', { class: 'console' }, da, mixerView(), db);
   for (const k of ['vol-a', 'vol-b']) SL[k].set(SL[k].value, false);
   setXfader(0.5);
 }
@@ -178,7 +179,8 @@ function frame() {
   }
   const e = Math.min(1, masterLevel() * 3.4); last.m = Math.max(e, (last.m || 0) * 0.94);
   mixerView.energy.style.transform = `scaleX(${last.m.toFixed(3)})`;
-  document.documentElement.style.setProperty('--pulse', last.m.toFixed(3));
+  const pulse = (Math.round(last.m * 20) / 20).toFixed(2); // 只改两个转盘外圈，且变化够大才写，避免整页样式重算
+  if (pulse !== last.pulse) { last.pulse = pulse; A.ui.jog.ring.style.opacity = B.ui.jog.ring.style.opacity = String(0.25 + pulse * 0.5); }
   if (lesson) lessonTick();
   requestAnimationFrame(frame);
 }

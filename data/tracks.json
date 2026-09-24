@@ -1,5 +1,21 @@
 [
  {
+  "id": "dance-robot",
+  "title": "Dance Robot ACTIVATE",
+  "artist": "Loyalty Freak Music",
+  "file": "audio/dance-robot.mp3",
+  "bpm": 120,
+  "firstBeat": 0.497,
+  "groove": [
+   45,
+   111
+  ],
+  "duration": 159,
+  "license": "CC0-1.0",
+  "source": "https://freemusicarchive.org/music/Loyalty_Freak_Music/ROLLER_DISCO_DANCE_DANCE/Loyalty_Freak_Music_-_ROLLER_DISCO_DANCE_DANCE_-_02_Dance_Robot_ACTIVATE/",
+  "origFile": "Loyalty_Freak_Music_-_02_-_Dance_Robot_ACTIVATE.mp3"
+ },
+ {
   "id": "sweet-you",
   "title": "Sweet You",
   "artist": "Loyalty Freak Music",
@@ -46,22 +62,6 @@
   "license": "CC0-1.0",
   "source": "https://freemusicarchive.org/music/Loyalty_Freak_Music/ROBOT_DANCE_/Loyalty_Freak_Music_-_ROBOT_DANCE__-_03_After_Party/",
   "origFile": "Loyalty_Freak_Music_-_03_-_After_Party.mp3"
- },
- {
-  "id": "dance-robot",
-  "title": "Dance Robot ACTIVATE",
-  "artist": "Loyalty Freak Music",
-  "file": "audio/dance-robot.mp3",
-  "bpm": 120,
-  "firstBeat": 0.497,
-  "groove": [
-   45,
-   111
-  ],
-  "duration": 159,
-  "license": "CC0-1.0",
-  "source": "https://freemusicarchive.org/music/Loyalty_Freak_Music/ROLLER_DISCO_DANCE_DANCE/Loyalty_Freak_Music_-_ROLLER_DISCO_DANCE_DANCE_-_02_Dance_Robot_ACTIVATE/",
-  "origFile": "Loyalty_Freak_Music_-_02_-_Dance_Robot_ACTIVATE.mp3"
  },
  {
   "id": "ymiy",

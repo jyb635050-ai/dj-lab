@@ -18,7 +18,7 @@ const unesc = s => s.replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#0
 const get = async u => { for (let k = 0; k < 3; k++) { try { const r = await fetch(u, { headers: { 'user-agent': UA } }); if (r.ok) return r; } catch { } await new Promise(r => setTimeout(r, 1500)); } throw new Error('fetch failed ' + u); };
 
 // ───── 音频分析 ─────
-function envelope(file) {
+export function envelope(file) {
   const b = execFileSync('ffmpeg', ['-v', 'error', '-i', file, '-ac', '1', '-ar', String(SR), '-f', 'f32le', '-'], { maxBuffer: 1 << 30 });
   let x = new Float32Array(b.buffer, b.byteOffset, b.length / 4);
   const w = 2 * Math.PI * 150 / SR, a = Math.sin(w) / (2 * Math.SQRT1_2), c = Math.cos(w), b0 = (1 - c) / 2, b1 = 1 - c, a0 = 1 + a, a1 = -2 * c, a2 = 1 - a;
@@ -33,7 +33,7 @@ function onset(env, t0, t1) {
   const m = d.reduce((a, b) => a + b, 0) / d.length; return d.map(v => v - m);
 }
 const acf = (d, k) => { let s = 0; for (let i = 0; i + k < d.length; i++) s += d[i] * d[i + k]; return s / (d.length - k); };
-function bpmAt(env, t0, t1, expect, beats = 8, win = 0.04) {
+export function bpmAt(env, t0, t1, expect, beats = 8, win = 0.04) {
   const d = onset(env, t0, t1), e0 = acf(d, 0); if (!(e0 > 0)) return { bpm: 0, s: 0, edge: true };
   const kLo = Math.floor(beats * 60 / (expect * (1 + win)) / DT), kHi = Math.ceil(beats * 60 / (expect * (1 - win)) / DT);
   let bk = kLo, bv = -Infinity; const v = {};
