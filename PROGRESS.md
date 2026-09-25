@@ -15,3 +15,4 @@
   - 曲库顺序调整见 BLOCKED.md 第 2 条（如实说明）
 - 任务 3 完成：8 课 44 步（`data/lessons.json`），每课开始重置打碟台、当前步要动的控件发光、每步提示音、过关撒彩带和星级、进度存本机。`--only data,home,lessons` 全 PASS；修了一个真 bug：语言存的是 JSON 字符串、读时按裸字符串比，刷新后回到中文
 - 本地全量 33/33 PASS 退出码 0（run-local.txt）；`--prove` 退出码 1「反向验证成立」（run-prove.txt）
+- 任务 4 完成：公开仓库 https://github.com/jyb635050-ai/dj-lab ，Pages 走 main 根目录，已 built。`--url https://jyb635050-ai.github.io/dj-lab/` 35/35 PASS 退出码 0（run-live.txt）；线上 tools/accept.mjs 指纹也是 026bc781…fd4a
