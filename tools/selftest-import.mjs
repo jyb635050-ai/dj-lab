@@ -14,7 +14,7 @@ want['friend.wav'] = 130.02;
 const browser = await chromium.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', args: ['--autoplay-policy=no-user-gesture-required'] });
 const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, acceptDownloads: true });
 const page = await ctx.newPage(); const errs = []; page.on('pageerror', e => errs.push(e.message)); page.on('console', m => m.type() === 'error' && errs.push(m.text()));
-await page.goto('http://127.0.0.1:8796/#/studio'); await page.waitForFunction(() => window.__dj?.ready);
+await page.goto((process.env.BASE || 'http://127.0.0.1:8796/') + '#/studio'); await page.waitForFunction(() => window.__dj?.ready);
 const t0 = Date.now();
 await page.setInputFiles('.mine input[type=file]', Object.keys(want).map(f => path.join(CACHE, f)));
 await page.waitForFunction(n => document.querySelectorAll('.track.local').length === n, Object.keys(want).length, { timeout: 120000 });
