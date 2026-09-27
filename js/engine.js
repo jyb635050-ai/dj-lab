@@ -7,15 +7,21 @@ addEventListener('keydown', unlock, true);
 // 总线：不用压缩/限幅（它会随底鼓一压一放，把鼓点形状弄糊），靠留足余量防削波：两台满音量叠加也不过 0dBFS 太多
 const master = ctx.createGain(); master.gain.value = 0.6;
 const limiter = master; master.connect(ctx.destination);
+export const masterOut = master; // 录音从这里接
 export const masterAnalyser = ctx.createAnalyser(); masterAnalyser.fftSize = 1024; master.connect(masterAnalyser);
 export const fxBus = ctx.createGain(); fxBus.gain.value = 0.5; fxBus.connect(limiter); // 提示音，不经过推子
 
 const SEC_PER_TURN = 1.8; // 33⅓ 转：转盘一圈 = 1.8 秒
 const bufCache = new Map();
 export function fetchBuffer(track) {
-  if (!bufCache.has(track.id)) bufCache.set(track.id, fetch(track.file).then(r => { if (!r.ok) throw new Error(track.file + ' ' + r.status); return r.arrayBuffer(); }).then(a => ctx.decodeAudioData(a)));
+  if (!bufCache.has(track.id)) {
+    const bytes = track.blob ? track.blob.arrayBuffer() : fetch(track.file).then(r => { if (!r.ok) throw new Error(track.file + ' ' + r.status); return r.arrayBuffer(); });
+    bufCache.set(track.id, bytes.then(a => ctx.decodeAudioData(a)));
+  }
   return bufCache.get(track.id);
 }
+export const primeBuffer = (track, buf) => bufCache.set(track.id, Promise.resolve(buf));
+export const dropBuffer = id => bufCache.delete(id);
 const T = () => ctx.currentTime;
 const ramp = (param, v, tc = 0.012) => param.setTargetAtTime(v, T(), tc);
 

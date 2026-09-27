@@ -16,3 +16,9 @@
 - 任务 3 完成：8 课 44 步（`data/lessons.json`），每课开始重置打碟台、当前步要动的控件发光、每步提示音、过关撒彩带和星级、进度存本机。`--only data,home,lessons` 全 PASS；修了一个真 bug：语言存的是 JSON 字符串、读时按裸字符串比，刷新后回到中文
 - 本地全量 33/33 PASS 退出码 0（run-local.txt）；`--prove` 退出码 1「反向验证成立」（run-prove.txt）
 - 任务 4 完成：公开仓库 https://github.com/jyb635050-ai/dj-lab ，Pages 走 main 根目录，已 built。`--url https://jyb635050-ai.github.io/dj-lab/` 35/35 PASS 退出码 0（run-live.txt）；线上 tools/accept.mjs 指纹也是 026bc781…fd4a
+
+## 2026-09-27 领导追加：本地歌曲导入 + 混音录制导出
+- `js/local.js`：拖入或选择本地音频（mp3/wav/m4a/flac/ogg…），浏览器解码后自动测速（同曲库算法＋1/2/4/8/16 拍合分＋100–140 BPM 轻先验），存 IndexedDB，只在本机、不上传；可 ÷2 / ×2 / TAP / 手输改速，改速后重算第一拍
+- `js/recorder.js`：顶栏「录制」从总线录（交叉推子之后），停下弹窗试听，下载 WAV（16 位、峰值拉到 −1dBFS）或 M4A/WebM
+- 自测 `tools/selftest-import.mjs`：5 首已知速度的真歌测速 5/5 误差 ≤0.01%；×2/÷2 可逆；8 次 500ms TAP → 119.5–119.7；录 5 秒导出 WAV（pcm_s16le 48k 双声道 5.27s）和 M4A（aac）都能被 ffprobe 读出；刷新后本地歌仍在；页面零报错
+- 测速准确率 `tools/tempo-bench.mjs`：59 首真歌（离线稳定段 ≥60 秒作真值）初版 49/59，加 16 拍＋先验后 56/59；错的 3 首都是 3:4 类节奏型，靠 TAP 或手改兜底

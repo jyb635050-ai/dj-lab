@@ -1,0 +1,26 @@
+import { createRequire } from 'node:module';
+const require = createRequire('C:/Users/73405/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright/package.json');
+const { chromium } = require('playwright');
+import http from 'node:http'; import fs from 'node:fs'; import path from 'node:path';
+const ROOT = 'D:/blender/DJLab';
+const srv = http.createServer((q, r) => { const f = path.join(ROOT, decodeURIComponent(q.url.split('?')[0])); if (!fs.existsSync(f) || fs.statSync(f).isDirectory()) { r.writeHead(404); return r.end(); } r.writeHead(200, { 'content-type': f.endsWith('.js') ? 'text/javascript' : f.endsWith('.html') ? 'text/html' : 'application/octet-stream' }); fs.createReadStream(f).pipe(r); }).listen(8799);
+const b = await chromium.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', args: ['--autoplay-policy=no-user-gesture-required'] });
+const p = await b.newPage(); await p.goto('http://127.0.0.1:8799/index.html');
+const r = await p.evaluate(async () => {
+  const E = await import('/js/engine.js'); const { ctx, A } = E; await ctx.resume();
+  const nb = ctx.createBuffer(1, ctx.sampleRate * 4, ctx.sampleRate), d = nb.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const an = ctx.createAnalyser(); an.fftSize = 8192; A.hp.connect(an);
+  const src = ctx.createBufferSource(); src.buffer = nb; src.loop = true; src.connect(A.input); src.start();
+  const fd = new Float32Array(an.frequencyBinCount), hz = ctx.sampleRate / an.fftSize;
+  const band = async () => { const acc = [0, 0, 0, 0]; for (let k = 0; k < 20; k++) { await new Promise(r => setTimeout(r, 50)); an.getFloatFrequencyData(fd); for (let i = 1; i < fd.length; i++) { const f = i * hz, pw = 10 ** (fd[i] / 10); if (f < 150) acc[0] += pw; else if (f >= 500 && f < 2000) acc[1] += pw; else if (f >= 6000 && f < 16000) acc[2] += pw; else if (f >= 150 && f < 500) acc[3] += pw; } } return acc.map(v => 10 * Math.log10(v)); };
+  const out = {}; await new Promise(r => setTimeout(r, 300));
+  out.flat = await band();
+  A.setEq('low', 0); await new Promise(r => setTimeout(r, 300)); out.lowKill = await band(); A.setEq('low', 0.5);
+  A.setEq('hi', 0); await new Promise(r => setTimeout(r, 300)); out.hiKill = await band(); A.setEq('hi', 0.5);
+  A.setEq('mid', 0); await new Promise(r => setTimeout(r, 300)); out.midKill = await band(); A.setEq('mid', 0.5);
+  return out;
+});
+const f = a => a.map(v => v.toFixed(1)).join(' / ');
+console.log('bands: <150 / 500-2k / 6k-16k / 150-500');
+for (const k of Object.keys(r)) console.log(k.padEnd(9), f(r[k]), '  Δ', f(r[k].map((v, i) => v - r.flat[i])));
+await b.close(); srv.close();

@@ -1,5 +1,7 @@
-import { ctx, A, B, decks, events, emit, setXfader, masterLevel, chime } from './engine.js';
+import { ctx, A, B, decks, events, emit, setXfader, masterLevel, chime, fetchBuffer } from './engine.js';
 import { h, makeSlider, makeJog } from './controls.js';
+import { listLocal, importFile, saveLocal, deleteLocal, phaseFor } from './local.js';
+import * as rec from './recorder.js';
 
 // ───── 文案 ─────
 const STR = {
@@ -14,6 +16,10 @@ const STR = {
     energy: '现场热度', loading: '载入中…', empty: '从曲库载入一首歌', rotate: '把手机横过来，打碟台更好用',
     studio_tip: '小提示：双击任意旋钮回到中间；按住 Shift 拖动可以微调；转盘在暂停时可以搓碟，播放时可以微调节拍。',
     foot: '音乐：CC0 · Free Music Archive　|　BEAT LAB 律动实验室',
+    my_tracks: '我的歌曲', import: '＋ 导入本地歌曲', drop_hint: '把 mp3 / wav / m4a / flac 拖到这里，或点上面的按钮。歌曲只存在你这台电脑的浏览器里，不会上传。',
+    analyzing: n => `正在分析「${n}」的速度…`, tempo_note: '自动测速约 95% 准，不对可以点 ÷2 / ×2、连点 TAP 或直接改数字。', import_fail: n => `「${n}」无法解码，换个格式试试`, local_tag: '本地', del: '删除', half: '速度减半', dbl: '速度加倍', bpm_edit: '自动测速约 95% 准；不对就点 ÷2 / ×2、跟着音乐连点 TAP，或直接改数字', tap_tip: '跟着鼓点连点 4 下以上',
+    builtin: '内置曲库（CC0）', rec: '录制', rec_na: '这个浏览器不支持录音',
+    ex_title: '混音录好了', ex_sub: s => `时长 ${s}，先听一遍再下载`, dl_wav: '下载 WAV（通用，体积大）', dl_small: e => `下载 ${e.toUpperCase()}（体积小）`, discard: '丢弃', making: '正在生成 WAV…',
   },
   en: {
     nav_learn: 'Lessons', nav_studio: 'Studio', nav_credits: 'Credits', lang: '中文',
@@ -26,6 +32,10 @@ const STR = {
     energy: 'Energy', loading: 'Loading…', empty: 'Load a track from the library', rotate: 'Turn your phone sideways for the decks',
     studio_tip: 'Tip: double-click any knob to reset it; hold Shift while dragging for fine control; the jog wheel scratches when paused and nudges when playing.',
     foot: 'Music: CC0 · Free Music Archive　|　BEAT LAB',
+    my_tracks: 'My tracks', import: '+ Import local songs', drop_hint: 'Drop mp3 / wav / m4a / flac files here, or use the button. Songs stay in this browser on this computer — nothing is uploaded.',
+    analyzing: n => `Analysing the tempo of “${n}”…`, tempo_note: 'Auto tempo is right about 95% of the time; fix it with ÷2 / ×2, TAP, or by typing.', import_fail: n => `Couldn’t decode “${n}” — try another format`, local_tag: 'LOCAL', del: 'Delete', half: 'Halve tempo', dbl: 'Double tempo', bpm_edit: 'Auto-detect is right about 95% of the time — otherwise use ÷2 / ×2, tap along with TAP, or type the number', tap_tip: 'Tap along with the kick 4+ times',
+    builtin: 'Built-in library (CC0)', rec: 'REC', rec_na: 'Recording isn’t supported in this browser',
+    ex_title: 'Your mix is recorded', ex_sub: s => `Length ${s} — have a listen, then download`, dl_wav: 'Download WAV (universal, large)', dl_small: e => `Download ${e.toUpperCase()} (small)`, discard: 'Discard', making: 'Building WAV…',
   },
 };
 let lang = (() => { try { return JSON.parse(localStorage.getItem('beatlab.lang')) === 'en' ? 'en' : 'zh'; } catch { return 'zh'; } })();
@@ -33,7 +43,8 @@ const t = (k, ...a) => { const v = STR[lang][k]; return typeof v === 'function' 
 const L = o => (o && typeof o === 'object' ? o[lang] ?? o.zh : o);
 const store = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { } } };
 
-let TRACKS = [], LESSONS = [];
+let TRACKS = [], LESSONS = [], LOCAL = [];
+let importing = [];
 const SL = {};
 
 // ───── 打碟台 ─────
@@ -110,15 +121,89 @@ function buildConsole() {
   for (const k of ['vol-a', 'vol-b']) SL[k].set(SL[k].value, false);
   setXfader(0.5);
 }
-function libraryView() {
-  const rows = TRACKS.map(tr => h('div', { class: 'track', 'data-testid': 'track', 'data-id': tr.id },
+function trackRow(tr) {
+  return h('div', { class: 'track', 'data-testid': 'track', 'data-id': tr.id },
     h('div', { class: 't-main' }, h('div', { class: 't-title' }, tr.title), h('div', { class: 't-artist' }, tr.artist)),
     h('div', { class: 't-bpm num' }, tr.bpm.toFixed(1)), h('div', { class: 't-len num' }, fmtTime(tr.duration)),
     h('button', { class: 'ld ld-a', type: 'button', 'data-testid': 'load-a', onclick: () => A.load(tr) }, 'A'),
-    h('button', { class: 'ld ld-b', type: 'button', 'data-testid': 'load-b', onclick: () => B.load(tr) }, 'B')));
-  return h('section', { class: 'library' }, h('div', { class: 'lib-head' }, h('h2', {}, t('library')), h('p', {}, t('lib_hint'))),
-    h('div', { class: 'lib-cols' }, h('span', {}, '#'), h('span', {}, 'BPM'), h('span', {}, 'TIME'), h('span', {}, 'LOAD')), h('div', { class: 'lib-rows' }, ...rows), h('p', { class: 'tip' }, t('studio_tip')));
+    h('button', { class: 'ld ld-b', type: 'button', 'data-testid': 'load-b', onclick: () => B.load(tr) }, 'B'));
 }
+function localRow(tr) {
+  const inp = h('input', { class: 'bpm-in num', type: 'number', min: 60, max: 200, step: 0.01, value: tr.bpm.toFixed(2), title: t('bpm_edit'), 'aria-label': 'BPM' });
+  const setBpm = async v => {
+    v = +v; if (!(v >= 40 && v <= 300)) { inp.value = tr.bpm.toFixed(2); return; }
+    tr.bpm = +v.toFixed(2); inp.value = tr.bpm.toFixed(2);
+    try { tr.firstBeat = +phaseFor(await fetchBuffer(tr), tr.bpm).toFixed(3); } catch { }
+    for (const d of [A, B]) if (d.track === tr) { d.rebase(); if (d.loop) d.setLoop(false); }
+    saveLocal(tr);
+  };
+  inp.addEventListener('change', () => setBpm(inp.value));
+  const taps = [];
+  const tap = h('button', { class: 'mini tap', type: 'button', title: t('tap_tip'), onclick: () => {
+    const now = performance.now(); if (taps.length && now - taps[taps.length - 1] > 2000) taps.length = 0; taps.push(now); if (taps.length > 12) taps.shift();
+    tap.textContent = taps.length < 4 ? `TAP ${taps.length}` : 'TAP'; flash(tap, 'ok');
+    if (taps.length >= 4) setBpm(60000 / ((taps[taps.length - 1] - taps[0]) / (taps.length - 1)));
+  } }, 'TAP');
+  return h('div', { class: 'track local', 'data-id': tr.id },
+    h('div', { class: 't-main' }, h('div', { class: 't-title' }, h('span', { class: 'tag' }, t('local_tag')), tr.title), tr.artist ? h('div', { class: 't-artist' }, tr.artist) : null),
+    h('div', { class: 't-tempo' }, inp, h('button', { class: 'mini', type: 'button', title: t('half'), onclick: () => setBpm(tr.bpm / 2) }, '÷2'), h('button', { class: 'mini', type: 'button', title: t('dbl'), onclick: () => setBpm(tr.bpm * 2) }, '×2'), tap),
+    h('div', { class: 't-len num' }, fmtTime(tr.duration)),
+    h('button', { class: 'ld ld-a', type: 'button', onclick: () => A.load(tr) }, 'A'),
+    h('button', { class: 'ld ld-b', type: 'button', onclick: () => B.load(tr) }, 'B'),
+    h('button', { class: 'ld ld-del', type: 'button', title: t('del'), 'aria-label': t('del'), onclick: async () => { await deleteLocal(tr.id); LOCAL = LOCAL.filter(x => x !== tr); refreshLibrary(); } }, '✕'));
+}
+function libraryView() {
+  const file = h('input', { type: 'file', accept: 'audio/*,.mp3,.wav,.m4a,.aac,.flac,.ogg,.opus', multiple: true, hidden: true, onchange: e => { importFiles([...e.target.files]); e.target.value = ''; } });
+  const mine = h('section', { class: 'mine' },
+    h('div', { class: 'lib-head' }, h('h2', {}, t('my_tracks')), h('button', { class: 'btn btn-import', type: 'button', onclick: () => file.click() }, t('import')), file),
+    h('div', { class: 'lib-rows' }, ...LOCAL.map(localRow), ...importing.map(x => h('div', { class: 'track busy' }, h('div', { class: 't-main' }, h('div', { class: 't-title' }, x.error ? t('import_fail', x.name) : t('analyzing', x.name)))))),
+    h('p', { class: 'drop-hint' }, t('drop_hint'), LOCAL.length ? ' ' + t('tempo_note') : ''));
+  return h('section', { class: 'library' }, mine,
+    h('div', { class: 'lib-head' }, h('h2', {}, t('builtin')), h('p', {}, t('lib_hint'))),
+    h('div', { class: 'lib-rows' }, ...TRACKS.map(trackRow)), h('p', { class: 'tip' }, t('studio_tip')));
+}
+function refreshLibrary() { const old = view.querySelector('.library'); if (old) old.replaceWith(libraryView()); }
+async function importFiles(files) {
+  files = files.filter(f => /^audio\//.test(f.type) || /\.(mp3|wav|m4a|aac|flac|ogg|opus|webm)$/i.test(f.name));
+  for (const f of files) {
+    const job = { name: f.name }; importing.push(job); refreshLibrary();
+    try { const tr = await importFile(f); LOCAL.push(tr); importing = importing.filter(x => x !== job); }
+    catch { job.error = true; setTimeout(() => { importing = importing.filter(x => x !== job); refreshLibrary(); }, 5000); }
+    refreshLibrary();
+  }
+}
+// 拖放：整个打碟台页面都能接
+let dragDepth = 0;
+const hasFiles = e => [...(e.dataTransfer?.types || [])].includes('Files');
+addEventListener('dragenter', e => { if (document.body.dataset.route !== 'studio' || !hasFiles(e)) return; e.preventDefault(); dragDepth++; document.body.classList.add('dragging'); });
+addEventListener('dragover', e => { if (document.body.dataset.route === 'studio' && hasFiles(e)) e.preventDefault(); });
+addEventListener('dragleave', () => { if (--dragDepth <= 0) { dragDepth = 0; document.body.classList.remove('dragging'); } });
+addEventListener('drop', e => { dragDepth = 0; document.body.classList.remove('dragging'); if (document.body.dataset.route !== 'studio') return; e.preventDefault(); importFiles([...(e.dataTransfer?.files || [])]); });
+
+// ───── 录混音 ─────
+const recBtn = document.querySelector('.rec'), recTime = recBtn.querySelector('.rec-t');
+if (!rec.supported) { recBtn.disabled = true; recBtn.title = STR.zh.rec_na; }
+recBtn.addEventListener('click', async () => {
+  if (!rec.isRecording()) { await rec.start(); recBtn.classList.add('on'); recBtn.setAttribute('aria-pressed', 'true'); return; }
+  const r = await rec.stop(); recBtn.classList.remove('on'); recBtn.setAttribute('aria-pressed', 'false'); recTime.textContent = t('rec');
+  if (r && r.blob.size) exportDialog(r);
+});
+function exportDialog(r) {
+  const url = URL.createObjectURL(r.blob), d = new Date(), p2 = n => String(n).padStart(2, '0');
+  const name = `BEATLAB-mix-${d.getFullYear()}${p2(d.getMonth() + 1)}${p2(d.getDate())}-${p2(d.getHours())}${p2(d.getMinutes())}`, status = h('p', { class: 'ex-status' });
+  const close = () => { URL.revokeObjectURL(url); wrap.remove(); };
+  const wavBtn = h('button', { class: 'btn btn-primary', type: 'button', onclick: async () => {
+    wavBtn.disabled = true; status.textContent = t('making');
+    try { rec.download(await rec.toWav(r.blob), name + '.wav'); status.textContent = ''; } catch (e) { status.textContent = String(e.message || e); }
+    wavBtn.disabled = false;
+  } }, t('dl_wav'));
+  const wrap = h('div', { class: 'complete-wrap', role: 'dialog', 'aria-label': t('ex_title') },
+    h('div', { class: 'complete export' }, h('h2', {}, t('ex_title')), h('p', {}, t('ex_sub', fmtTime(r.seconds))),
+      h('audio', { controls: true, src: url, preload: 'metadata' }), status,
+      h('div', { class: 'cta col' }, wavBtn, h('button', { class: 'btn', type: 'button', onclick: () => rec.download(r.blob, `${name}.${r.ext}`) }, t('dl_small', r.ext)), h('button', { class: 'btn btn-ghost', type: 'button', onclick: close }, t('discard')))));
+  document.body.append(wrap);
+}
+
 const fmtTime = s => { s = Math.max(0, s || 0); return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`; };
 
 // ───── 波形 ─────
@@ -181,6 +266,7 @@ function frame() {
   mixerView.energy.style.transform = `scaleX(${last.m.toFixed(3)})`;
   const pulse = (Math.round(last.m * 20) / 20).toFixed(2); // 只改两个转盘外圈，且变化够大才写，避免整页样式重算
   if (pulse !== last.pulse) { last.pulse = pulse; A.ui.jog.ring.style.opacity = B.ui.jog.ring.style.opacity = String(0.25 + pulse * 0.5); }
+  if (rec.isRecording()) setText(recTime, fmtTime(rec.elapsed()));
   if (lesson) lessonTick();
   requestAnimationFrame(frame);
 }
@@ -345,4 +431,5 @@ applyLang();
   [TRACKS, LESSONS] = await Promise.all(['data/tracks.json', 'data/lessons.json'].map(f => fetch(f).then(r => r.json())));
   buildConsole(); addEventListener('hashchange', render); render(); requestAnimationFrame(frame);
   window.__dj.ready = true;
+  LOCAL = await listLocal(); if (LOCAL.length) refreshLibrary();
 })();
