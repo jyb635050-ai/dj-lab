@@ -398,6 +398,7 @@ body.dragging .mine { border-color: var(--a); background: rgba(62, 232, 255, .09
 .automix i { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(62, 232, 255, .28), rgba(181, 139, 255, .4)); transform-origin: left; transform: scaleX(0); }
 .automix > span { position: relative; }
 .automix.on { color: #fff; border-color: var(--b); }
+.automix.wait { animation: pend 1s ease-in-out infinite; } .automix.wait > span { opacity: .6; }
 .console[data-model="starter"] .automix { display: flex; }
 
 /* ── 俱乐部专业：金属黑、直角、大转盘带屏、8 色热点、效果器 ── */

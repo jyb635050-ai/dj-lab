@@ -24,7 +24,8 @@ await pick('starter');
 ok(await vis('.automix') && !(await vis('.fx-unit')) && !(await vis('.hot-x')), '入门：有一键过渡，没有效果器/热点 5–8');
 await page.evaluate(() => window.__dj.seek('a', 30)); await page.click('[data-testid=play-a]');
 await page.locator('[data-testid=xfader]').focus(); await page.keyboard.press('Home');
-await page.click('.automix'); await page.waitForTimeout(700);
+// 线上下载慢时 B 台可能还没载完：一键过渡应自己等，等到它真正开始
+await page.click('.automix'); await page.waitForFunction(() => document.querySelector('.automix').classList.contains('on'), null, { timeout: 25000 }); await page.waitForTimeout(700);
 await page.screenshot({ path: ROOT + '/shots/model-starter.png' });
 const bpmA = (await st()).a.bpm; await page.waitForTimeout(16 * 60 / bpmA * 1000 + 600);
 const xf = +(await page.getAttribute('[data-testid=xfader]', 'aria-valuenow')), lowA = +(await page.getAttribute('[data-testid=eq-low-a]', 'aria-valuenow')), lowB = +(await page.getAttribute('[data-testid=eq-low-b]', 'aria-valuenow'));

@@ -181,10 +181,16 @@ function modelNote() { const m = MODELS[curModel]; return h('p', { class: 'model
 function refreshModelUI() { view.querySelector('.model-bar')?.replaceWith(modelBar()); view.querySelector('.model-note')?.replaceWith(modelNote()); }
 // 入门机型：一键过渡（16 拍内推交叉推子＋交换低音）
 let auto = null;
-function autoMix() {
+async function autoMix() {
   if (auto) { auto = null; return; }
   const toB = SL.xfader.value < 0.5, outD = toB ? A : B, inD = toB ? B : A;
-  if (!outD.playing || !inD.buf) { flash(ext.auto, 'bad'); return; }
+  if (!outD.playing || !inD.track) { flash(ext.auto, 'bad'); return; }
+  if (!inD.buf) { // 下一首还在下载：等它载完再开始，按钮先显示载入中
+    ext.auto.classList.add('wait'); const t0 = performance.now();
+    while (!inD.buf && performance.now() - t0 < 20000) await new Promise(r => setTimeout(r, 100));
+    ext.auto.classList.remove('wait');
+    if (!inD.buf || !outD.playing) { flash(ext.auto, 'bad'); return; }
+  }
   SL[`eq-low-${inD.name}`].set(0);
   if (!inD.playing) inD.start();
   inD.sync(outD);
