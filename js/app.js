@@ -1,4 +1,5 @@
-import { ctx, A, B, decks, events, emit, setXfader, masterLevel, chime, fetchBuffer } from './engine.js';
+import { ctx, A, B, decks, events, emit, setXfader, masterLevel, chime, fetchBuffer, setCurve, mix, fx, FX_BEATS, updateFx, linkFx } from './engine.js';
+import { MODELS, MODEL_IDS, LOOP_BEATS, fmtBeats } from './models.js';
 import { h, makeSlider, makeJog } from './controls.js';
 import { listLocal, importFile, saveLocal, deleteLocal, phaseFor } from './local.js';
 import * as rec from './recorder.js';
@@ -19,6 +20,7 @@ const STR = {
     my_tracks: '我的歌曲', import: '＋ 导入本地歌曲', drop_hint: '把 mp3 / wav / m4a / flac 拖到这里，或点上面的按钮。歌曲只存在你这台电脑的浏览器里，不会上传。',
     analyzing: n => `正在分析「${n}」的速度…`, tempo_note: '自动测速约 95% 准，不对可以点 ÷2 / ×2、连点 TAP 或直接改数字。', import_fail: n => `「${n}」无法解码，换个格式试试`, local_tag: '本地', del: '删除', half: '速度减半', dbl: '速度加倍', bpm_edit: '自动测速约 95% 准；不对就点 ÷2 / ×2、跟着音乐连点 TAP，或直接改数字', tap_tip: '跟着鼓点连点 4 下以上',
     builtin: '内置曲库（CC0）', rec: '录制', rec_na: '这个浏览器不支持录音',
+    model_l: '机型', automix: '一键过渡', automix_t: '16 拍内自动推交叉推子、交换低音（先让两台都有歌）', curve_l: '推子曲线', smooth: '平滑', cut: '硬切', fx_l: '节拍效果', on: '开', q_t: '量化：热点吸附到拍子', range_t: '点击切换变速范围', loop_t: '循环长度（拍）', rpm_t: '转速',
     ex_title: '混音录好了', ex_sub: s => `时长 ${s}，先听一遍再下载`, dl_wav: '下载 WAV（通用，体积大）', dl_small: e => `下载 ${e.toUpperCase()}（体积小）`, discard: '丢弃', making: '正在生成 WAV…',
   },
   en: {
@@ -35,6 +37,7 @@ const STR = {
     my_tracks: 'My tracks', import: '+ Import local songs', drop_hint: 'Drop mp3 / wav / m4a / flac files here, or use the button. Songs stay in this browser on this computer — nothing is uploaded.',
     analyzing: n => `Analysing the tempo of “${n}”…`, tempo_note: 'Auto tempo is right about 95% of the time; fix it with ÷2 / ×2, TAP, or by typing.', import_fail: n => `Couldn’t decode “${n}” — try another format`, local_tag: 'LOCAL', del: 'Delete', half: 'Halve tempo', dbl: 'Double tempo', bpm_edit: 'Auto-detect is right about 95% of the time — otherwise use ÷2 / ×2, tap along with TAP, or type the number', tap_tip: 'Tap along with the kick 4+ times',
     builtin: 'Built-in library (CC0)', rec: 'REC', rec_na: 'Recording isn’t supported in this browser',
+    model_l: 'Machine', automix: 'Auto mix', automix_t: 'Rides the crossfader and swaps the bass over 16 beats (load both decks first)', curve_l: 'Fader curve', smooth: 'Smooth', cut: 'Cut', fx_l: 'Beat FX', on: 'ON', q_t: 'Quantize: cues snap to the beat', range_t: 'Click to change tempo range', loop_t: 'Loop length (beats)', rpm_t: 'Speed',
     ex_title: 'Your mix is recorded', ex_sub: s => `Length ${s} — have a listen, then download`, dl_wav: 'Download WAV (universal, large)', dl_small: e => `Download ${e.toUpperCase()} (small)`, discard: 'Discard', making: 'Building WAV…',
   },
 };
@@ -66,30 +69,37 @@ function deckView(d) {
   const flips = []; let dir = 0, touching = false;
   const jog = ui.jog = makeJog({
     id: `jog-${n}`,
-    onTouch: on => { touching = on; dir = 0; if (!on && d.bend !== 1) d.setBend(1); },
+    onTouch: on => { touching = on; dir = 0; if (d.vinyl) { if (on) d.hold(); else d.release(); return; } if (!on && d.bend !== 1) d.setBend(1); },
     onTurn: (da, dt) => {
       const now = performance.now(), s = Math.sign(da);
       if (dir && s !== dir) { flips.push(now); while (flips.length && now - flips[0] > 3000) flips.shift(); if (flips.length >= 4) { emit('scratch', n); flips.length = 0; } }
       dir = s;
-      if (d.playing) d.setBend(1 + Math.max(-0.25, Math.min(0.25, da / dt / (2 * Math.PI) * 0.08))); // 播放中：推拉微调
+      if (d.playing && !d.vinyl) d.setBend(1 + Math.max(-0.25, Math.min(0.25, da / dt / (2 * Math.PI) * 0.08))); // 播放中：推拉微调
       else d.scratch(da, dt);
     },
   });
   ui.jogTime = h('div', { class: 'jc-time num' }, '0:00'); ui.jogBeat = h('div', { class: 'jc-beat num' }, '—');
   jog.center.append(ui.jogTime, ui.jogBeat);
+  jog.el.append(h('div', { class: 'tonearm', 'aria-hidden': 'true' }, h('i'))); // 黑胶机型才显示
   const btn = (id, label, fn, cls = '') => h('button', { class: `pad ${cls}`, 'data-testid': id, onclick: fn, type: 'button' }, label);
-  ui.play = btn(`play-${n}`, h('span', { class: 'ic-play' }), () => d.toggle(), 'pad-play');
+  ui.play = btn(`play-${n}`, [h('span', { class: 'ic-play' }), h('span', { class: 'ss' }, 'START·STOP')], () => d.toggle(), 'pad-play');
   ui.play.setAttribute('aria-pressed', 'false'); ui.play.setAttribute('aria-label', 'play');
   ui.cue = btn(`cue-${n}`, 'CUE', () => d.cueBtn(), 'pad-cue');
   ui.sync = btn(`sync-${n}`, 'SYNC', () => { const ok = d.sync(n === 'a' ? B : A); flash(ui.sync, ok ? 'ok' : 'bad'); }, 'pad-sync');
   ui.loop = btn(`loop-${n}`, h('span', {}, 'LOOP', h('small', {}, '4')), () => d.setLoop(!d.loop), 'pad-loop'); ui.loop.setAttribute('aria-pressed', 'false');
-  ui.hot = [1, 2, 3, 4].map(k => { const b = btn(`hotcue-${n}-${k}`, String(k), () => d.hotcue(k - 1), 'pad-hot'); b.addEventListener('contextmenu', e => { e.preventDefault(); d.clearHotcue(k - 1); }); return b; });
+  ui.hot = [1, 2, 3, 4, 5, 6, 7, 8].map(k => { const b = btn(`hotcue-${n}-${k}`, String(k), () => d.hotcue(k - 1), 'pad-hot' + (k > 4 ? ' hot-x' : '')); b.addEventListener('contextmenu', e => { e.preventDefault(); d.clearHotcue(k - 1); }); return b; });
+  const mini = (label, fn, cls = '', title) => h('button', { class: `pad mini-pad ${cls}`, type: 'button', title, onclick: fn }, label);
+  ui.loopVal = h('b', { class: 'num' }, '4');
+  const stepLoop = k => { const i = Math.max(0, Math.min(LOOP_BEATS.length - 1, LOOP_BEATS.indexOf(d.loopBeats) + k)); d.setLoopBeats(LOOP_BEATS[i]); };
+  ui.loopLen = h('div', { class: 'loop-len', title: t('loop_t') }, mini('−', () => stepLoop(-1), 'll'), ui.loopVal, mini('+', () => stepLoop(1), 'll'));
+  ui.range = h('button', { class: 'range num', type: 'button', title: t('range_t'), onclick: () => { const r = MODELS[curModel].pitch; setRange(d, r[(r.indexOf(d.pitchRange) + 1) % r.length]); } }, '±8%');
+  ui.rpm = [1, 1.35].map((k, i) => mini(i ? '45' : '33', () => { d.rebase(); d.rpm = k; d.applyRate(); }, 'rpm', t('rpm_t')));
   const body = n === 'a' ? [SL[`pitch-${n}`].el, jog.el] : [jog.el, SL[`pitch-${n}`].el];
   return h('section', { class: `deck deck-${n}`, 'data-deck': n },
-    h('header', { class: 'd-head' }, h('div', { class: 'd-badge' }, N), h('div', { class: 'd-meta' }, ui.title, ui.artist), h('div', { class: 'd-tempo' }, ui.bpm, h('div', { class: 'd-bpm-l' }, 'BPM'), ui.pitchOut)),
+    h('header', { class: 'd-head' }, h('div', { class: 'd-badge' }, N), h('div', { class: 'd-meta' }, ui.title, ui.artist), h('div', { class: 'd-tempo' }, ui.bpm, h('div', { class: 'd-bpm-l' }, 'BPM'), h('div', { class: 'd-pitch-row' }, ui.range, ui.pitchOut))),
     h('div', { class: 'wave-wrap' }, ui.wave, h('div', { class: 'playhead' })), ui.overview,
     h('div', { class: 'd-body' }, ...body),
-    h('div', { class: 'transport' }, ui.cue, ui.play, ui.sync, ui.loop),
+    h('div', { class: 'transport' }, ui.cue, ui.play, ui.sync, ui.loop, ui.loopLen, ...ui.rpm),
     h('div', { class: 'hotcues' }, h('span', { class: 'hc-l' }, 'HOT CUE'), ...ui.hot));
 }
 function flash(el, cls) { el.classList.remove('flash-ok', 'flash-bad'); void el.offsetWidth; el.classList.add('flash-' + cls); }
@@ -97,6 +107,7 @@ function stripView(d) {
   const n = d.name;
   const knob = (id, label, fn) => (SL[id] = makeSlider({ id, kind: 'knob', min: 0, max: 1, step: 0.01, value: 0.5, label, bipolar: true, onInput: fn })).el;
   return h('div', { class: `strip strip-${n}` },
+    h('div', { class: 'trim-wrap' }, knob(`trim-${n}`, 'TRIM', v => d.trim.gain.setTargetAtTime(Math.pow(10, (v - 0.5) * 24 / 20), ctx.currentTime, 0.01))),
     knob(`eq-hi-${n}`, 'HI', v => d.setEq('hi', v)), knob(`eq-mid-${n}`, 'MID', v => d.setEq('mid', v)), knob(`eq-low-${n}`, 'LOW', v => d.setEq('low', v)),
     knob(`filter-${n}`, 'FILTER', v => d.setFilter(v)));
 }
@@ -112,14 +123,87 @@ function mixerView() {
     h('div', { class: 'energy' }, mixerView.energyLbl, h('div', { class: 'energy-bar' }, mixerView.energy)),
     h('div', { class: 'beats' }, h('div', { class: 'bl bl-a' }, h('b', {}, 'A'), ...lights(A)), h('div', { class: 'bl bl-b' }, h('b', {}, 'B'), ...lights(B))),
     h('div', { class: 'channels' }, stripView(A), h('div', { class: 'faders' }, vu(A), SL['vol-a'].el, SL['vol-b'].el, vu(B)), stripView(B)),
-    h('div', { class: 'xf-row' }, h('b', {}, 'A'), SL.xfader.el, h('b', {}, 'B')));
+    h('div', { class: 'xf-row' }, h('b', {}, 'A'), SL.xfader.el, h('b', {}, 'B')),
+    extrasView());
+}
+let ext = {};
+function extrasView() {
+  // 入门：一键过渡
+  ext.autoFill = h('i');
+  ext.auto = h('button', { class: 'automix', type: 'button', title: t('automix_t'), onclick: autoMix }, ext.autoFill, h('span', {}, '⇄ ', h('span', { 'data-i18n': 'automix' }, t('automix'))));
+  // 黑胶：推子曲线
+  ext.curves = ['smooth', 'cut'].map(c => h('button', { class: 'seg', type: 'button', 'aria-pressed': String(c === 'smooth'), onclick: () => { curveSel = c; store.set('beatlab.curve', c); setCurve(c); } }, h('span', { 'data-i18n': c }, t(c))));
+  const curve = h('div', { class: 'curve' }, h('span', { class: 'x-l', 'data-i18n': 'curve_l' }, t('curve_l')), ...ext.curves);
+  // 俱乐部：节拍效果器
+  SL['fx-wet'] = makeSlider({ id: 'fx-wet', kind: 'knob', min: 0, max: 1, step: 0.01, value: 0.5, def: 0.5, label: 'WET', onInput: v => { fx.wet = v; } });
+  ext.kinds = ['echo', 'reverb', 'flanger'].map(k => h('button', { class: 'seg', type: 'button', onclick: () => { fx.kind = k; } }, k.toUpperCase()));
+  ext.beatVal = h('b', { class: 'num' }, '1/2');
+  const stepFx = k => { const i = Math.max(0, Math.min(FX_BEATS.length - 1, FX_BEATS.indexOf(fx.beats) + k)); fx.beats = FX_BEATS[i]; };
+  ext.fxOn = h('button', { class: 'pad fx-on', type: 'button', 'aria-pressed': 'false', onclick: () => { fx.on = !fx.on; } }, 'FX ON');
+  ext.q = h('button', { class: 'pad fx-q', type: 'button', 'aria-pressed': 'false', title: t('q_t'), onclick: () => { quantizeOn = !quantizeOn; store.set('beatlab.q', quantizeOn); A.quantize = B.quantize = quantizeOn; } }, 'Q');
+  const fxUnit = h('div', { class: 'fx-unit' },
+    h('div', { class: 'fx-row' }, h('span', { class: 'x-l', 'data-i18n': 'fx_l' }, t('fx_l')), ...ext.kinds),
+    h('div', { class: 'fx-row' }, h('button', { class: 'pad mini-pad', type: 'button', onclick: () => stepFx(-1) }, '◀'), ext.beatVal, h('button', { class: 'pad mini-pad', type: 'button', onclick: () => stepFx(1) }, '▶'), SL['fx-wet'].el, ext.fxOn, ext.q));
+  return h('div', { class: 'extras' }, ext.auto, curve, fxUnit);
 }
 let consoleEl, libEl;
+let curModel = 'standard', quantizeOn = store.get('beatlab.q', true), curveSel = store.get('beatlab.curve', 'smooth');
+const rangeSel = { a: 10, b: 10 };
+function setRange(d, r) {
+  d.pitchRange = r; if (MODELS[curModel].pitch.length > 1) rangeSel[d.name] = r;
+  SL[`pitch-${d.name}`].setRange(-r, r, true);
+  if (Math.abs(d.pitch) > r) d.setPitch(Math.sign(d.pitch) * r);
+  d.ui.range.textContent = `±${r}%`;
+}
+function applyModel(id) {
+  if (!MODELS[id]) id = 'standard';
+  const m = MODELS[id]; curModel = id; consoleEl.dataset.model = id; auto = null;
+  for (const d of [A, B]) {
+    if (d.vinyl && !m.vinyl) { d.release(); d.rebase(); d.rpm = 1; d.applyRate(); }
+    d.vinyl = m.vinyl; d.quantize = m.loopSel && quantizeOn;
+    setRange(d, m.pitch.length > 1 ? rangeSel[d.name] : m.pitch[0]);
+    if (!m.loopSel && d.loopBeats !== 4) d.setLoopBeats(4);
+    if (!m.trim) SL[`trim-${d.name}`].set(0.5);
+    if (m.hot < 8) for (let i = 4; i < 8; i++) d.clearHotcue(i);
+    if (m.vinyl && d.loop) d.setLoop(false);
+  }
+  setCurve(m.vinyl ? curveSel : 'smooth');
+  if (!m.fx) fx.on = false;
+  linkFx(m.fx); updateFx(true);
+}
+function modelBar() {
+  const m = MODELS[curModel];
+  return h('section', { class: 'model-bar' },
+    h('div', { class: 'mb-seg', role: 'tablist', 'aria-label': t('model_l') }, ...MODEL_IDS.map(id => h('button', { type: 'button', role: 'tab', class: 'mb-btn', 'aria-selected': String(id === curModel), onclick: () => { store.set('beatlab.model', id); applyModel(id); refreshModelUI(); } }, h('b', {}, MODELS[id].tag), h('span', {}, L(MODELS[id].name))))),
+    h('div', { class: 'mb-info' }, h('p', { class: 'mb-sub' }, h('b', {}, L(m.name)), ' · ', L(m.sub)), h('div', { class: 'chips' }, ...m.chips[lang].map(c => h('span', {}, c)))));
+}
+function modelNote() { const m = MODELS[curModel]; return h('p', { class: 'model-note' }, h('b', {}, L(m.name)), '：', L(m.desc)); }
+function refreshModelUI() { view.querySelector('.model-bar')?.replaceWith(modelBar()); view.querySelector('.model-note')?.replaceWith(modelNote()); }
+// 入门机型：一键过渡（16 拍内推交叉推子＋交换低音）
+let auto = null;
+function autoMix() {
+  if (auto) { auto = null; return; }
+  const toB = SL.xfader.value < 0.5, outD = toB ? A : B, inD = toB ? B : A;
+  if (!outD.playing || !inD.buf) { flash(ext.auto, 'bad'); return; }
+  SL[`eq-low-${inD.name}`].set(0);
+  if (!inD.playing) inD.start();
+  inD.sync(outD);
+  auto = { t0: performance.now(), dur: 16 * 60 / outD.bpm * 1000, x0: SL.xfader.value, x1: toB ? 1 : 0, outD, inD, swapped: false };
+}
+function autoTick() {
+  if (!auto) { ext.autoFill.style.transform = 'scaleX(0)'; ext.auto.classList.remove('on'); return; }
+  const k = Math.min(1, (performance.now() - auto.t0) / auto.dur), e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+  SL.xfader.set(auto.x0 + (auto.x1 - auto.x0) * e);
+  if (!auto.swapped && k >= 0.5) { SL[`eq-low-${auto.outD.name}`].set(0); SL[`eq-low-${auto.inD.name}`].set(0.5); auto.swapped = true; }
+  ext.autoFill.style.transform = `scaleX(${k.toFixed(3)})`; ext.auto.classList.add('on');
+  if (k >= 1) { SL[`eq-low-${auto.outD.name}`].set(0.5); auto = null; }
+}
 function buildConsole() {
   const da = deckView(A), db = deckView(B);
   consoleEl = h('div', { class: 'console' }, da, mixerView(), db);
   for (const k of ['vol-a', 'vol-b']) SL[k].set(SL[k].value, false);
   setXfader(0.5);
+  SL.xfader.el.addEventListener('pointerdown', () => { auto = null; }); // 手动碰推子就取消一键过渡
 }
 function trackRow(tr) {
   return h('div', { class: 'track', 'data-testid': 'track', 'data-id': tr.id },
@@ -249,9 +333,11 @@ function frame() {
     setText(ui.bpm, d.track ? d.bpm.toFixed(1) : '0.0');
     setText(ui.pitchOut, (d.pitch >= 0 ? '+' : '−') + Math.abs(d.pitch).toFixed(2) + '%');
     setText(ui.title, d.track ? d.track.title : t('empty')); setText(ui.artist, d.track ? (d.loading ? t('loading') : d.track.artist) : '');
-    setAttr(ui.play, 'aria-pressed', d.playing); ui.play.classList.toggle('pending', d.pendingPlay);
+    setAttr(ui.play, 'aria-pressed', d.playing || d.held); (ui.root ||= ui.play.closest('.deck')).classList.toggle('spin', d.playing || d.held); ui.play.classList.toggle('pending', d.pendingPlay);
+    setText(ui.loopVal, fmtBeats(d.loopBeats)); ui.rpm.forEach((b, i) => setAttr(b, 'aria-pressed', (d.rpm > 1) === !!i));
     setAttr(ui.loop, 'aria-pressed', !!d.loop);
     ui.hot.forEach((b, i) => b.classList.toggle('set', d.cues[i] != null));
+    if (d.vinyl) { setText(ui.pitchOut, `${d.pitch >= 0 ? '+' : '−'}${Math.abs(d.pitch).toFixed(1)}%`); }
     const sl = SL[`pitch-${d.name}`]; if (Math.abs(sl.value - d.pitch) > 1e-6) sl.set(d.pitch, true);
     ui.jog.platter.style.transform = `rotate(${(pos / 1.8 * 360) % 360}deg)`;
     setText(ui.jogTime, d.buf ? '−' + fmtTime(d.buf.duration - pos) : '0:00');
@@ -266,6 +352,12 @@ function frame() {
   mixerView.energy.style.transform = `scaleX(${last.m.toFixed(3)})`;
   const pulse = (Math.round(last.m * 20) / 20).toFixed(2); // 只改两个转盘外圈，且变化够大才写，避免整页样式重算
   if (pulse !== last.pulse) { last.pulse = pulse; A.ui.jog.ring.style.opacity = B.ui.jog.ring.style.opacity = String(0.25 + pulse * 0.5); }
+  if (curModel === 'starter') autoTick();
+  if (curModel === 'club') {
+    updateFx(); setText(ext.beatVal, fmtBeats(fx.beats)); setAttr(ext.fxOn, 'aria-pressed', fx.on); setAttr(ext.q, 'aria-pressed', quantizeOn);
+    ext.kinds.forEach(b => setAttr(b, 'aria-pressed', b.textContent.toLowerCase() === fx.kind));
+  }
+  if (curModel === 'vinyl') ext.curves.forEach((b, i) => setAttr(b, 'aria-pressed', ['smooth', 'cut'][i] === mix.curve));
   if (rec.isRecording()) setText(recTime, fmtTime(rec.elapsed()));
   if (lesson) lessonTick();
   requestAnimationFrame(frame);
@@ -382,6 +474,7 @@ function lessonView(l) {
     h('p', { class: 'kicker' }, t('lesson_n', idx + 1)), h('h1', {}, L(l.title)), h('p', { class: 'c-intro' }, L(l.intro)),
     h('div', { class: 'c-prog' }, h('div', { class: 'c-bar' }, bar), count),
     h('ol', { class: 'steps' }, ...items));
+  applyModel('standard'); // 课程都按标准机型写
   const root = h('div', { class: 'lesson' }, coach, h('div', { class: 'stage' }, consoleEl));
   lesson = { l, i: 0, t: performance.now(), items, bar, count, root, miss: 0 };
   resetConsole(l.setup).then(() => { if (lesson && lesson.l === l) lesson.t = Math.max(lesson.t, 0); });
@@ -391,7 +484,8 @@ function lessonView(l) {
 function studioView() {
   if (!A.track && TRACKS[0]) A.load(TRACKS[0]);
   if (!B.track && TRACKS[1]) B.load(TRACKS[1]);
-  return h('div', { class: 'studio' }, consoleEl, libraryView());
+  applyModel(store.get('beatlab.model', 'standard'));
+  return h('div', { class: 'studio' }, modelBar(), consoleEl, modelNote(), libraryView());
 }
 function creditsView() {
   return h('div', { class: 'credits' }, h('h1', {}, t('credits_title')), h('p', { class: 'lead' }, t('credits_sub')),

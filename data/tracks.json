@@ -96,20 +96,20 @@
   "origFile": "Loyalty_Freak_Music_-_06_-_Lag.mp3"
  },
  {
-  "id": "hello-regan",
-  "title": "Hello Regan !",
+  "id": "chillin",
+  "title": "Chillin with a drink at the club",
   "artist": "Loyalty Freak Music",
-  "file": "audio/hello-regan.mp3",
-  "bpm": 128.02,
-  "firstBeat": 0.253,
+  "file": "audio/chillin.mp3",
+  "bpm": 130.03,
+  "firstBeat": 0.022,
   "groove": [
-   145,
+   10,
    196
   ],
   "duration": 200,
   "license": "CC0-1.0",
-  "source": "https://freemusicarchive.org/music/Loyalty_Freak_Music/WITCHY_BATTY_SPOOKY_HALLOWEEN_IN_SEPTEMBER_/Hello_Regan_/",
-  "origFile": "Loyalty_Freak_Music_-_04_-_Hello_Regan_.mp3"
+  "source": "https://freemusicarchive.org/music/Loyalty_Freak_Music/TO_CHILL_AND_STAY_AWAKE/Loyalty_Freak_Music_-_TO_CHILL_AND_STAY_AWAKE_-_03_Chillin_with_a_drink_at_the_club/",
+  "origFile": "Loyalty_Freak_Music_-_03_-_Chillin_with_a_drink_at_the_club.mp3"
  },
  {
   "id": "friend-to-friend",

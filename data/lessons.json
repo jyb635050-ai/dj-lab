@@ -68,7 +68,7 @@
   "id": "sync-loop-cue",
   "title": { "zh": "SYNC、循环与热点", "en": "Sync, loops and hot cues" },
   "intro": { "zh": "三个让你轻松很多的按钮：一键对拍、原地循环、瞬间跳回记号。", "en": "Three buttons that make life easy: one-press beatmatch, a loop that holds, and markers you can jump to." },
-  "setup": { "a": "ymiy", "b": "hello-regan" },
+  "setup": { "a": "ymiy", "b": "chillin" },
   "steps": [
    { "text": { "zh": "播放 A 台。", "en": "Play deck A." }, "check": { "kind": "play", "deck": "a", "is": true } },
    { "text": { "zh": "播放 B 台。", "en": "Play deck B." }, "check": { "kind": "play", "deck": "b", "is": true } },

@@ -76,6 +76,11 @@ export function makeSlider({ id, kind, min, max, step, value, def = value, label
   el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end); el.addEventListener('lostpointercapture', end);
   el.addEventListener('dblclick', () => o.set(def));
   el.addEventListener('wheel', e => { if (document.activeElement !== el && kind !== 'knob') return; e.preventDefault(); o.set(o.value + (e.deltaY < 0 ? 1 : -1) * step * 2); }, { passive: false });
+  // 运行时改量程（如变速范围 ±6/±10/±16%），值夹到新范围内
+  o.setRange = (a, b, silent) => {
+    min = o.min = a; max = o.max = b; el.setAttribute('aria-valuemin', a); el.setAttribute('aria-valuemax', b);
+    const v = o.value; o.value = NaN; o.set(v, silent);
+  };
   o.set(value, true); el.setAttribute('aria-valuenow', o.value);
   return o;
 }

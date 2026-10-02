@@ -357,6 +357,122 @@ body.dragging .mine { border-color: var(--a); background: rgba(62, 232, 255, .09
   .rec { padding: 0 10px; } .rec .rec-t { display: none; } .rec.on .rec-t { display: inline; }
 }
 
+/* ───── 机型切换 ───── */
+.model-bar { display: flex; align-items: center; gap: 12px 18px; flex-wrap: wrap; padding: 8px 10px; border-radius: 14px; border: 1px solid var(--line); background: var(--panel); }
+.mb-seg { display: flex; gap: 3px; padding: 3px; border-radius: 11px; background: rgba(0, 0, 0, .35); box-shadow: inset 0 0 0 1px var(--line); }
+.mb-btn { display: flex; flex-direction: column; align-items: flex-start; gap: 0; padding: 5px 13px 6px; border-radius: 8px; border: 0; background: none; color: var(--muted); cursor: pointer; transition: background .2s, color .2s, box-shadow .2s; }
+.mb-btn b { font: 600 9px var(--mono); letter-spacing: .16em; color: var(--dim); transition: color .2s; }
+.mb-btn span { font-size: 13px; white-space: nowrap; }
+.mb-btn:hover { color: var(--text); }
+.mb-btn[aria-selected="true"] { background: var(--panel2); color: var(--text); box-shadow: inset 0 0 0 1px var(--line2), 0 8px 22px -12px var(--a); }
+.mb-btn[aria-selected="true"] b { color: var(--a); }
+.mb-info { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; }
+.mb-sub { margin: 0; font-size: 13px; color: var(--muted); white-space: nowrap; }
+.mb-sub b { color: var(--text); }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chips span { font: 500 11px var(--sans); color: var(--muted); padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line2); white-space: nowrap; }
+.model-note { margin: 0; padding: 12px 16px; border-radius: 12px; background: rgba(62, 232, 255, .04); border: 1px solid rgba(62, 232, 255, .14); color: var(--muted); font-size: 13.5px; line-height: 1.65; }
+.model-note b { color: var(--text); }
+
+/* 各机型专属控件：默认都藏起来 */
+.hot-x, .loop-len, .range, .rpm, .tonearm, .trim-wrap, .automix, .curve, .fx-unit, .pad-play .ss { display: none; }
+.console[data-model="standard"] .extras { display: none; }
+.extras { display: grid; gap: 8px; }
+.d-pitch-row { grid-column: 1 / 3; display: flex; justify-content: flex-end; align-items: center; gap: 6px; }
+.mini-pad { height: 42px; min-width: 26px; padding: 0 6px; }
+.x-l { font: 600 9px var(--mono); letter-spacing: .12em; color: var(--dim); white-space: nowrap; margin-right: 2px; text-transform: uppercase; }
+.seg { flex: 1; height: 26px; padding: 0 6px; border-radius: 6px; border: 1px solid var(--line2); background: none; color: var(--muted); font: 600 9.5px var(--mono); letter-spacing: .06em; cursor: pointer; transition: .15s; }
+.seg:hover { color: var(--text); }
+.seg[aria-pressed="true"] { background: var(--a); color: #041014; border-color: var(--a); }
+
+/* ── 入门控制器：圆润、小转盘、大号打击垫、一键过渡 ── */
+.console[data-model="starter"] { --jog: clamp(128px, 11vw, 158px); }
+.console[data-model="starter"] .deck, .console[data-model="starter"] .mixer { border-radius: 28px; background: linear-gradient(180deg, #1b1f28, #12151c); border-color: rgba(255, 255, 255, .09); }
+.console[data-model="starter"] .pad { border-radius: 14px; }
+.console[data-model="starter"] .transport .pad { height: 46px; }
+.console[data-model="starter"] .pad-sync { color: var(--a); border-color: rgba(62, 232, 255, .55); font-size: 13px; }
+.console[data-model="starter"] .deck-b .pad-sync { color: var(--b); border-color: rgba(181, 139, 255, .55); }
+.console[data-model="starter"] .pad-hot { height: 42px; border-radius: 12px; background: linear-gradient(180deg, rgba(255, 255, 255, .09), rgba(255, 255, 255, .04)); font-size: 13px; }
+.console[data-model="starter"] .jog-ring { -webkit-mask: radial-gradient(circle, transparent 60%, #000 62%); mask: radial-gradient(circle, transparent 60%, #000 62%); }
+.automix { position: relative; overflow: hidden; display: none; align-items: center; justify-content: center; width: 100%; height: 40px; border-radius: 12px; border: 1px solid rgba(62, 232, 255, .45); background: none; color: var(--a); font: 600 12px var(--mono); letter-spacing: .08em; cursor: pointer; transition: color .2s, border-color .2s; }
+.automix i { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(62, 232, 255, .28), rgba(181, 139, 255, .4)); transform-origin: left; transform: scaleX(0); }
+.automix > span { position: relative; }
+.automix.on { color: #fff; border-color: var(--b); }
+.console[data-model="starter"] .automix { display: flex; }
+
+/* ── 俱乐部专业：金属黑、直角、大转盘带屏、8 色热点、效果器 ── */
+.console[data-model="club"] { --jog: clamp(156px, 14vw, 206px); }
+.console[data-model="club"] .deck, .console[data-model="club"] .mixer { border-radius: 8px; background: linear-gradient(180deg, #131417, #0a0b0d); border-color: rgba(255, 255, 255, .07); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07), 0 30px 80px -40px #000; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.console[data-model="club"] .pad { border-radius: 5px; }
+.console[data-model="club"] .d-badge { border-radius: 4px; }
+.console[data-model="club"] .d-bpm { font-size: 25px; }
+.console[data-model="club"] .jog-center { inset: 22%; background: radial-gradient(circle, #0b1820, #05090c 70%); box-shadow: inset 0 0 0 2px rgba(62, 232, 255, .4), inset 0 0 26px rgba(62, 232, 255, .16); }
+.console[data-model="club"] .deck-b .jog-center { box-shadow: inset 0 0 0 2px rgba(181, 139, 255, .45), inset 0 0 26px rgba(181, 139, 255, .16); }
+.console[data-model="club"] .jc-time { font-size: 16px; } .console[data-model="club"] .jc-beat { font-size: 12px; }
+.console[data-model="club"] .platter { background: radial-gradient(circle, #1a1d23 0 30%, transparent 31%), repeating-conic-gradient(from 0deg, #15171c 0 2deg, #0f1115 2deg 4deg); }
+.console[data-model="club"] .range, .console[data-model="club"] .loop-len, .console[data-model="club"] .trim-wrap, .console[data-model="club"] .fx-unit { display: flex; }
+.console[data-model="club"] .hot-x { display: grid; }
+.console[data-model="club"] .transport { grid-template-columns: 1fr 1.2fr 1fr 1fr auto; }
+.console[data-model="club"] .hotcues { grid-template-columns: auto repeat(8, 1fr); gap: 4px; }
+.console[data-model="club"] .pad-hot { font-size: 10px; height: 28px; }
+.console[data-model="club"] .hotcues .pad-hot.set { color: #0b0c0e; }
+.console[data-model="club"] .hotcues .pad-hot.set:nth-child(2) { background: #ff5f7a; border-color: #ff5f7a; box-shadow: 0 0 14px -4px #ff5f7a; }
+.console[data-model="club"] .hotcues .pad-hot.set:nth-child(3) { background: #ffb86b; border-color: #ffb86b; box-shadow: 0 0 14px -4px #ffb86b; }
+.console[data-model="club"] .hotcues .pad-hot.set:nth-child(4) { background: #ffe066; border-color: #ffe066; box-shadow: 0 0 14px -4px #ffe066; }
+.console[data-model="club"] .hotcues .pad-hot.set:nth-child(5) { background: #7dffb2; border-color: #7dffb2; box-shadow: 0 0 14px -4px #7dffb2; }
+.console[data-model="club"] .hotcues .pad-hot.set:nth-child(6) { background: #3ee8ff; border-color: #3ee8ff; box-shadow: 0 0 14px -4px #3ee8ff; }
+.console[data-model="club"] .hotcues .pad-hot.set:nth-child(7) { background: #6f9bff; border-color: #6f9bff; box-shadow: 0 0 14px -4px #6f9bff; }
+.console[data-model="club"] .hotcues .pad-hot.set:nth-child(8) { background: #b58bff; border-color: #b58bff; box-shadow: 0 0 14px -4px #b58bff; }
+.console[data-model="club"] .hotcues .pad-hot.set:nth-child(9) { background: #ff7ae0; border-color: #ff7ae0; box-shadow: 0 0 14px -4px #ff7ae0; }
+.console[data-model="club"] .vu i { -webkit-mask: repeating-linear-gradient(0deg, #000 0 4px, transparent 4px 6px); mask: repeating-linear-gradient(0deg, #000 0 4px, transparent 4px 6px); }
+.range { font: 600 10px var(--mono); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--line2); background: none; color: var(--muted); cursor: pointer; align-items: center; }
+.range:hover { color: var(--text); border-color: var(--c); }
+.loop-len { align-items: center; gap: 3px; }
+.loop-len b { min-width: 28px; text-align: center; font-size: 12px; color: var(--c); }
+.trim-wrap { justify-content: center; padding-bottom: 4px; margin-bottom: 2px; border-bottom: 1px solid var(--line); }
+.fx-unit { flex-direction: column; gap: 6px; padding: 8px; border-radius: 6px; background: rgba(0, 0, 0, .4); box-shadow: inset 0 0 0 1px var(--line); }
+.fx-row { display: flex; align-items: center; gap: 4px; }
+.fx-row > b { min-width: 30px; text-align: center; font-size: 12px; color: var(--a); }
+.fx-row .mini-pad { height: 28px; min-width: 24px; font-size: 10px; }
+.fx-row .ctl-knob { margin: -4px 2px; } .fx-row .ctl-knob .knob-body { width: 34px; height: 34px; } .fx-row .ctl-knob .k-cap { inset: 6px; }
+.fx-on, .fx-q { height: 28px; padding: 0 9px; font-size: 10px; }
+.fx-on[aria-pressed="true"] { background: #ff5f7a; border-color: #ff5f7a; color: #fff; box-shadow: 0 0 18px -4px #ff5f7a; }
+.fx-q[aria-pressed="true"] { background: var(--warn); border-color: var(--warn); color: #1a0f02; }
+
+/* ── 经典黑胶：唱机底座、频闪点、唱片标签、唱臂；没有波形/BPM/SYNC ── */
+.console[data-model="vinyl"] { --jog: clamp(186px, 16.5vw, 232px); }
+.console[data-model="vinyl"] .deck { border-radius: 10px; background: linear-gradient(155deg, #2a2b30, #18191c 55%, #202125); border-color: rgba(255, 255, 255, .09); }
+.console[data-model="vinyl"] .mixer { border-radius: 10px; background: linear-gradient(180deg, #17181b, #0e0f11); }
+.console[data-model="vinyl"] .wave-wrap, .console[data-model="vinyl"] .overview, .console[data-model="vinyl"] .d-bpm, .console[data-model="vinyl"] .d-bpm-l,
+.console[data-model="vinyl"] .pad-cue, .console[data-model="vinyl"] .pad-sync, .console[data-model="vinyl"] .pad-loop, .console[data-model="vinyl"] .hotcues,
+.console[data-model="vinyl"] .beats, .console[data-model="vinyl"] .jc-beat, .console[data-model="vinyl"] .pad-play .ic-play { display: none; }
+.console[data-model="vinyl"] .rpm, .console[data-model="vinyl"] .pad-play .ss { display: grid; }
+.console[data-model="vinyl"] .trim-wrap, .console[data-model="vinyl"] .curve { display: flex; }
+.console[data-model="vinyl"] .tonearm { display: block; }
+.console[data-model="vinyl"] .transport { grid-template-columns: 1.8fr 1fr 1fr; }
+.console[data-model="vinyl"] .pad-play .ss { font-size: 11px; letter-spacing: .14em; }
+.console[data-model="vinyl"] .d-body { padding: 10px 0 8px; }
+.console[data-model="vinyl"] .jog-ring { opacity: 1 !important; background: repeating-conic-gradient(#c7cad1 0 1.4deg, transparent 1.4deg 4deg); -webkit-mask: radial-gradient(circle, transparent 94%, #000 95%); mask: radial-gradient(circle, transparent 94%, #000 95%); }
+.console[data-model="vinyl"] .platter { inset: 5%; background: radial-gradient(circle, transparent 0 33%, #0a0a0c 34% 36%, transparent 37%), repeating-radial-gradient(circle, #0b0b0d 0 1.5px, #141417 1.5px 3px); box-shadow: 0 0 0 3px #2b2c31, 0 14px 30px -10px #000; }
+.console[data-model="vinyl"] .platter .mark { display: none; }
+.console[data-model="vinyl"] .jog-center { inset: 34%; background: radial-gradient(circle, #0b0b0d 0 7%, var(--c) 8% 100%); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .4); }
+.console[data-model="vinyl"] .jc-time { color: #06080b; font-weight: 600; font-size: 11px; transform: translateY(15px); }
+.console[data-model="vinyl"] .deck-b .d-body { flex-direction: row-reverse; } /* 唱臂都在右边，B 台的变速推子挪到左边让位 */
+.rpm[aria-pressed="true"] { background: var(--c); color: #05070a; border-color: var(--c); }
+.tonearm { position: absolute; right: -9%; top: -6%; width: 16px; height: 74%; pointer-events: none; z-index: 2; }
+.tonearm::before { content: ''; position: absolute; left: -5px; top: -6px; width: 26px; height: 26px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #d9dce2, #7c8089 60%, #3b3d43); box-shadow: 0 4px 10px rgba(0, 0, 0, .6); }
+.tonearm i { position: absolute; left: 6px; top: 6px; width: 4px; height: 100%; border-radius: 2px; background: linear-gradient(90deg, #f1f2f5, #9a9ea7); transform-origin: 2px 0; transform: rotate(4deg); transition: transform .7s var(--ease); box-shadow: 2px 3px 6px rgba(0, 0, 0, .5); }
+.tonearm i::after { content: ''; position: absolute; left: -5px; bottom: -14px; width: 12px; height: 18px; border-radius: 3px; background: linear-gradient(180deg, #d0d3da, #6e727b); transform: rotate(-24deg); }
+.deck.spin .tonearm i { transform: rotate(26deg); }
+.curve { align-items: center; gap: 4px; }
+
+@media (max-width: 900px) {
+  .model-bar { padding: 6px; } .mb-btn { padding: 4px 9px; } .mb-btn span { font-size: 12px; } .mb-info .chips { display: none; }
+  .console[data-model="club"] .transport { grid-template-columns: repeat(4, 1fr); } .console[data-model="club"] .loop-len { grid-column: 1 / -1; justify-content: center; }
+  .console[data-model="vinyl"], .console[data-model="club"] { --jog: 128px; } .console[data-model="starter"] { --jog: 112px; }
+}
+@media (max-width: 640px) { .mb-seg { width: 100%; } .mb-btn { flex: 1; align-items: center; } .mb-sub { white-space: normal; } }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
 }
